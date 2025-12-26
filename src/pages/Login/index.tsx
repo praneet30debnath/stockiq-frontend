@@ -195,27 +195,6 @@ const Login = () => {
                 </Button>
               </form>
 
-              {/* Demo Credentials */}
-              <Box
-                sx={{
-                  mt: 3,
-                  p: 2,
-                  borderRadius: 2,
-                  background: 'rgba(99, 102, 241, 0.05)',
-                  border: '1px solid rgba(99, 102, 241, 0.1)',
-                }}
-              >
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Demo Credentials:
-                </Typography>
-                <Typography variant="body2" fontWeight="600">
-                  Username: demo
-                </Typography>
-                <Typography variant="body2" fontWeight="600">
-                  Password: demo123
-                </Typography>
-              </Box>
-
               {/* Register Link */}
               <Box sx={{ mt: 3, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">

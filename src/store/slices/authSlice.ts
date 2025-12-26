@@ -45,6 +45,7 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      state.loading = false;
       state.error = null;
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, action.payload.token);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(action.payload.user));
@@ -53,6 +54,8 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.loading = false;
+      state.error = null;
       localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER_DATA);
     },
