@@ -1,16 +1,12 @@
-import { Box, useMediaQuery, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { useAppSelector } from '@/store';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
-  const theme = useTheme();
-  const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>

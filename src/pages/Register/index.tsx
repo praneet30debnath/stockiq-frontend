@@ -38,7 +38,7 @@ const Register = () => {
   });
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
+  const [_otpSent, setOtpSent] = useState(false);
 
   const steps = ['Account Details', 'Email Verification'];
 

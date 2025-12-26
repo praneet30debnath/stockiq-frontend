@@ -11,7 +11,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Chip,
   IconButton,
   CircularProgress,
@@ -148,14 +147,17 @@ const Portfolio = () => {
 
       if (sortField === 'symbol') {
         return sortOrder === 'asc'
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+          ? String(aValue).localeCompare(String(bValue))
+          : String(bValue).localeCompare(String(aValue));
       }
 
+      const aNum = Number(aValue);
+      const bNum = Number(bValue);
+
       if (sortOrder === 'asc') {
-        return aValue - bValue;
+        return aNum - bNum;
       } else {
-        return bValue - aValue;
+        return bNum - aNum;
       }
     });
   };
