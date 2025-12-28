@@ -116,6 +116,38 @@ export interface PortfolioAnalytics {
   dividendIncome: number;
 }
 
+// Time-Based Gains Types
+export interface PeriodGain {
+  gainPercent: number;
+  gainAmount: number;
+  applicable: boolean;
+}
+
+export interface TimeBasedHolding {
+  id: number;
+  symbol: string;
+  companyName: string;
+  invested: number;
+  currentValue: number;
+  oneDay: PeriodGain | null;
+  fiveDays: PeriodGain | null;
+  oneMonth: PeriodGain | null;
+  threeMonths: PeriodGain | null;
+  sixMonths: PeriodGain | null;
+  oneYear: PeriodGain | null;
+  threeYears: PeriodGain | null;
+  fiveYears: PeriodGain | null;
+  allTime: PeriodGain | null;
+}
+
+export interface TimeBasedPortfolio {
+  holdings: TimeBasedHolding[];
+  totalInvested: number;
+  totalCurrentValue: number;
+}
+
+export type PortfolioViewMode = 'default' | 'time-based-gains';
+
 // User & Auth Types
 export interface User {
   id: number;

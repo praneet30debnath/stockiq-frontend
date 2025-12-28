@@ -5,14 +5,6 @@ import {
   Card,
   CardContent,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  IconButton,
   CircularProgress,
   Alert,
   Grid,
@@ -20,15 +12,18 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TableSortLabel,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
-import { Add, TrendingUp, TrendingDown, Delete, Refresh, AccountBalance, Assessment } from '@mui/icons-material';
+import { Add, TrendingUp, TrendingDown, Refresh, AccountBalance, Assessment } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { formatCurrency, formatPercent, getChangeColor } from '@/utils/formatters';
+import { formatCurrency, formatPercent } from '@/utils/formatters';
 import { portfolioApi } from '@/api/endpoints/portfolio.api';
 import { AddTransactionDialog } from '@/components/transactions/AddTransactionDialog';
 import { StockDetailDialog } from '@/components/stocks/StockDetailDialog';
-import { Holding } from '@/types';
+import { DefaultHoldingsTable } from '@/components/portfolio/DefaultHoldingsTable';
+import { TimeBasedGainsTable } from '@/components/portfolio/TimeBasedGainsTable';
+import { Holding, PortfolioViewMode, TimeBasedPortfolio } from '@/types';
 
 type SortField = 'symbol' | 'currentValue' | 'gain' | 'gainPercent' | 'dayChange';
 type SortOrder = 'asc' | 'desc';
@@ -85,6 +80,11 @@ const Portfolio = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [sortField, setSortField] = useState<SortField>('currentValue');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+
+  // Time-based gains state
+  const [viewMode, setViewMode] = useState<PortfolioViewMode>('default');
+  const [timeBasedData, setTimeBasedData] = useState<TimeBasedPortfolio | null>(null);
+  const [timeBasedLoading, setTimeBasedLoading] = useState(false);
 
   useEffect(() => {
     fetchPortfolio();
@@ -160,6 +160,33 @@ const Portfolio = () => {
         return bNum - aNum;
       }
     });
+  };
+
+  const handleViewModeChange = async (
+    _: React.MouseEvent<HTMLElement>,
+    newMode: PortfolioViewMode | null
+  ) => {
+    if (newMode === null) return;
+
+    setViewMode(newMode);
+
+    // Lazy load time-based data only when switched to that view
+    if (newMode === 'time-based-gains' && !timeBasedData) {
+      await fetchTimeBasedGains();
+    }
+  };
+
+  const fetchTimeBasedGains = async () => {
+    try {
+      setTimeBasedLoading(true);
+      const response = await portfolioApi.getTimeBasedGains();
+      setTimeBasedData(response.data);
+    } catch (err) {
+      console.error('Error fetching time-based gains:', err);
+      setError('Failed to load time-based gains');
+    } finally {
+      setTimeBasedLoading(false);
+    }
   };
 
   if (loading) {
@@ -284,10 +311,36 @@ const Portfolio = () => {
       >
         <Card>
           <CardContent sx={{ p: 0 }}>
-            <Box sx={{ p: 3, pb: 2 }}>
+            <Box sx={{ p: 3, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
               <Typography variant="h6" fontWeight="bold">
                 All Holdings ({holdings.length})
               </Typography>
+
+              {/* View Mode Switcher */}
+              {holdings.length > 0 && (
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={handleViewModeChange}
+                  size="small"
+                  sx={{
+                    '& .MuiToggleButton-root': {
+                      px: 2,
+                      py: 1,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      borderRadius: 1,
+                    },
+                  }}
+                >
+                  <ToggleButton value="default">
+                    Default View
+                  </ToggleButton>
+                  <ToggleButton value="time-based-gains">
+                    Time-Based Gains
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              )}
             </Box>
             {holdings.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
@@ -305,175 +358,21 @@ const Portfolio = () => {
                   Add Transaction
                 </Button>
               </Box>
+            ) : viewMode === 'default' ? (
+              <DefaultHoldingsTable
+                holdings={holdings}
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+                onRowClick={setSelectedStock}
+                onDeleteClick={handleDeleteClick}
+              />
             ) : (
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: 'rgba(99, 102, 241, 0.05)' }}>
-                      <TableCell>
-                        <TableSortLabel
-                          active={sortField === 'symbol'}
-                          direction={sortField === 'symbol' ? sortOrder : 'asc'}
-                          onClick={() => handleSort('symbol')}
-                        >
-                          <Typography variant="body2" fontWeight={700}>
-                            Stock
-                          </Typography>
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" fontWeight={700}>
-                          Qty
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" fontWeight={700}>
-                          Avg Price
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" fontWeight={700}>
-                          Current Price
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <TableSortLabel
-                          active={sortField === 'currentValue'}
-                          direction={sortField === 'currentValue' ? sortOrder : 'asc'}
-                          onClick={() => handleSort('currentValue')}
-                        >
-                          <Typography variant="body2" fontWeight={700}>
-                            Current Value
-                          </Typography>
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell align="right">
-                        <TableSortLabel
-                          active={sortField === 'gain'}
-                          direction={sortField === 'gain' ? sortOrder : 'asc'}
-                          onClick={() => handleSort('gain')}
-                        >
-                          <Typography variant="body2" fontWeight={700}>
-                            Total Gain
-                          </Typography>
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell align="right">
-                        <TableSortLabel
-                          active={sortField === 'dayChange'}
-                          direction={sortField === 'dayChange' ? sortOrder : 'asc'}
-                          onClick={() => handleSort('dayChange')}
-                        >
-                          <Typography variant="body2" fontWeight={700}>
-                            Day Change
-                          </Typography>
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2" fontWeight={700}>
-                          Actions
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {holdings.map((holding: Holding) => (
-                      <TableRow
-                        key={holding.id}
-                        hover
-                        onClick={() => setSelectedStock(holding)}
-                        sx={{
-                          cursor: 'pointer',
-                          '&:hover': {
-                            bgcolor: 'rgba(99, 102, 241, 0.02)',
-                          },
-                        }}
-                      >
-                        <TableCell>
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
-                              {holding.symbol}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {holding.companyName}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2">{holding.quantity}</Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2">
-                            {formatCurrency(holding.avgBuyPrice)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" fontWeight={600}>
-                            {formatCurrency(holding.currentPrice)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" fontWeight={600}>
-                            {formatCurrency(holding.currentValue)}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Invested: {formatCurrency(holding.invested)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            sx={{ color: getChangeColor(holding.gain) }}
-                          >
-                            {formatCurrency(holding.gain)}
-                          </Typography>
-                          <Chip
-                            label={formatPercent(holding.gainPercent)}
-                            size="small"
-                            sx={{
-                              mt: 0.5,
-                              background: `${getChangeColor(holding.gainPercent)}15`,
-                              color: getChangeColor(holding.gainPercent),
-                              fontWeight: 600,
-                              fontSize: '0.7rem',
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            sx={{ color: getChangeColor(holding.dayChange) }}
-                          >
-                            {formatCurrency(holding.dayChange)}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{ color: getChangeColor(holding.dayChangePercent) }}
-                          >
-                            {formatPercent(holding.dayChangePercent)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                            onClick={(e) => handleDeleteClick(holding, e)}
-                            size="small"
-                            sx={{
-                              color: '#ef4444',
-                              '&:hover': {
-                                background: 'rgba(239, 68, 68, 0.1)',
-                              },
-                            }}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <TimeBasedGainsTable
+                data={timeBasedData}
+                loading={timeBasedLoading}
+                onRefresh={fetchTimeBasedGains}
+              />
             )}
           </CardContent>
         </Card>

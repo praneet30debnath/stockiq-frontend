@@ -1,8 +1,10 @@
 import { axiosInstance } from '../axios-config';
-import { Portfolio, Transaction, TransactionRequest, PortfolioAnalytics } from '@/types';
+import { Portfolio, Transaction, TransactionRequest, PortfolioAnalytics, TimeBasedPortfolio } from '@/types';
 
 export const portfolioApi = {
   getPortfolio: () => axiosInstance.get<Portfolio>(`/portfolio`),
+
+  getTimeBasedGains: () => axiosInstance.get<TimeBasedPortfolio>(`/portfolio/time-based-gains`),
 
   addTransaction: (data: TransactionRequest) =>
     axiosInstance.post<Transaction>(`/portfolio/transactions`, data),
