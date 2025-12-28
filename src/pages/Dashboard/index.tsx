@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Box, Grid, Card, CardContent, Typography, Chip, CircularProgress, Alert } from '@mui/material';
 import { TrendingUp, TrendingDown, AccountBalance, Assessment, Refresh } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -7,8 +6,8 @@ import { formatCurrency, formatPercent, getChangeColor } from '@/utils/formatter
 import { portfolioApi } from '@/api/endpoints/portfolio.api';
 import { AddTransactionDialog } from '@/components/transactions/AddTransactionDialog';
 import { StockDetailDialog } from '@/components/stocks/StockDetailDialog';
+import { MarketIndicesCarousel } from '@/components/indices/MarketIndicesCarousel';
 import { getMarketStatus } from '@/utils/marketStatus';
-import { ROUTES } from '@/routes/routes.config';
 
 const StatCard = ({ title, value, subtitle, icon, color }: any) => (
   <motion.div
@@ -60,7 +59,6 @@ const StatCard = ({ title, value, subtitle, icon, color }: any) => (
 );
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const [portfolioData, setPortfolioData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +134,7 @@ const Dashboard = () => {
   const topHoldings = portfolioData?.holdings?.slice(0, 4) || [];
 
   return (
-    <Box id="dashnpard-index-box">
+    <Box>
       {/* Welcome Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -175,7 +173,7 @@ const Dashboard = () => {
 
       {/* Stats Cards */}
       <Grid container spacing={{ xs: 2, md: 2.5, lg: 3 }} sx={{ mb: { xs: 2, md: 3, lg: 4 } }}>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid item xs={6} sm={6} lg={3}>
           <StatCard
             title="Total Invested"
             value={formatCurrency(stats.totalInvested)}
@@ -183,7 +181,7 @@ const Dashboard = () => {
             color="#667eea"
           />
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid item xs={6} sm={6} lg={3}>
           <StatCard
             title="Current Value"
             value={formatCurrency(stats.currentValue)}
@@ -191,7 +189,7 @@ const Dashboard = () => {
             color="#764ba2"
           />
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid item xs={6} sm={6} lg={3}>
           <StatCard
             title="Total Gain"
             value={formatCurrency(stats.totalGain)}
@@ -200,7 +198,7 @@ const Dashboard = () => {
             color={stats.totalGain >= 0 ? '#10b981' : '#ef4444'}
           />
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid item xs={6} sm={6} lg={3}>
           <StatCard
             title="Today's Change"
             value={formatCurrency(stats.dayChange)}
@@ -213,13 +211,14 @@ const Dashboard = () => {
 
       {/* Top Holdings */}
       <Grid container spacing={{ xs: 2, md: 2.5, lg: 3 }}>
-        <Grid item xs={12} lg={8}>
+        <Grid item xs={12} lg={8} sx={{ display: 'flex' }}>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
+            style={{ width: '100%' }}
           >
-            <Card>
+            <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2, md: 2.5, lg: 3 } }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Top Holdings
@@ -289,49 +288,14 @@ const Dashboard = () => {
           </motion.div>
         </Grid>
 
-        <Grid item xs={12} lg={4}>
+        <Grid item xs={12} lg={4} sx={{ display: 'flex' }}>
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
+            style={{ width: '100%' }}
           >
-            <Card>
-              <CardContent sx={{ p: { xs: 2, md: 2.5, lg: 3 } }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Quick Actions
-                </Typography>
-                <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {[
-                    { label: 'Add Transaction', color: '#667eea', onClick: () => setAddTransactionOpen(true) },
-                    { label: 'View Portfolio', color: '#764ba2', onClick: () => navigate(ROUTES.PORTFOLIO) },
-                    { label: 'View Tax Report', color: '#f59e0b', onClick: () => navigate(ROUTES.TAX_REPORTS) },
-                    { label: 'Screen Stocks', color: '#10b981', onClick: () => navigate(ROUTES.SCREENER) },
-                  ].map((action, index) => (
-                    <motion.button
-                      key={action.label}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={action.onClick}
-                      style={{
-                        padding: '16px',
-                        border: 'none',
-                        borderRadius: '12px',
-                        background: `linear-gradient(135deg, ${action.color} 0%, ${action.color}dd 100%)`,
-                        color: 'white',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        boxShadow: `0 4px 12px ${action.color}40`,
-                      }}
-                    >
-                      {action.label}
-                    </motion.button>
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
+            <MarketIndicesCarousel />
           </motion.div>
         </Grid>
       </Grid>

@@ -382,6 +382,9 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
             <Controller
               name="notes"
               control={control}
+              rules={{
+                maxLength: { value: 500, message: 'Notes must not exceed 500 characters' },
+              }}
               render={({ field }) => (
                 <TextField
                   {...field}
@@ -389,6 +392,12 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
                   multiline
                   rows={2}
                   placeholder="Add any additional notes about this transaction"
+                  inputProps={{ maxLength: 500 }}
+                  helperText={
+                    errors.notes?.message ||
+                    `${field.value?.length || 0}/500 characters`
+                  }
+                  error={!!errors.notes}
                 />
               )}
             />
