@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -10,10 +11,20 @@ import {
   Chip,
   Card,
   CardContent,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
-import { Close, TrendingUp, TrendingDown } from '@mui/icons-material';
+import { Close, TrendingUp, TrendingDown, ShoppingCart } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { formatCurrency, formatPercent, getChangeColor } from '@/utils/formatters';
+import { StockChart } from './StockChart';
+import { portfolioApi } from '@/api/endpoints/portfolio.api';
+import { Transaction } from '@/types';
 
 interface StockDetailDialogProps {
   open: boolean;
@@ -38,6 +49,29 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
   onClose,
   stock,
 }) => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+
+  useEffect(() => {
+    if (open && stock) {
+      fetchTransactions();
+    }
+  }, [open, stock]);
+
+  const fetchTransactions = async () => {
+    if (!stock) return;
+
+    try {
+      setLoadingTransactions(true);
+      const response = await portfolioApi.getTransactionsBySymbol(stock.symbol);
+      setTransactions(response.data);
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
   if (!stock) return null;
 
   const isProfit = stock.gain >= 0;
@@ -113,6 +147,21 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
                 </Typography>
               </CardContent>
             </Card>
+          </motion.div>
+
+          <Divider />
+
+          {/* Price Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <StockChart
+              symbol={stock.symbol}
+              dayChange={stock.dayChange}
+              dayChangePercent={stock.dayChangePercent}
+            />
           </motion.div>
 
           <Divider />
@@ -273,6 +322,72 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
                 </Typography>
               </Box>
             </Box>
+          </Box>
+
+          <Divider />
+
+          {/* Transaction History */}
+          <Box>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Transaction History
+            </Typography>
+            {loadingTransactions ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress size={32} />
+              </Box>
+            ) : transactions.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No transactions found for this stock
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer sx={{ mt: 2 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell align="right">Quantity</TableCell>
+                      <TableCell align="right">Price</TableCell>
+                      <TableCell align="right">Total</TableCell>
+                      <TableCell>Notes</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {transactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>
+                          {new Date(transaction.transactionDate).toLocaleDateString('en-IN')}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            icon={transaction.transactionType === 'BUY' ? <ShoppingCart sx={{ fontSize: 14 }} /> : undefined}
+                            label={transaction.transactionType}
+                            size="small"
+                            sx={{
+                              background: transaction.transactionType === 'BUY' ? '#10b98115' : '#ef444415',
+                              color: transaction.transactionType === 'BUY' ? '#10b981' : '#ef4444',
+                              fontWeight: 600,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="right">{transaction.quantity}</TableCell>
+                        <TableCell align="right">{formatCurrency(transaction.price)}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>
+                          {formatCurrency(transaction.totalAmount)}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                            {transaction.notes || '-'}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </Box>
         </Box>
       </DialogContent>

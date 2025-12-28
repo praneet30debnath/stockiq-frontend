@@ -1,5 +1,5 @@
 import { axiosInstance } from '../axios-config';
-import { Stock, StockDetails, HistoricalData, TimeRange, TimeInterval } from '@/types';
+import { Stock, StockDetails, HistoricalData, MarketIndex, TimeRange, TimeInterval } from '@/types';
 
 export const stocksApi = {
   searchStocks: (query: string) =>
@@ -12,7 +12,5 @@ export const stocksApi = {
       params: { range, interval },
     }),
 
-  getNifty50: () => axiosInstance.get<Stock[]>(`/stocks/indices/nifty50`),
-
-  getBankNifty: () => axiosInstance.get<Stock[]>(`/stocks/indices/banknifty`),
+  getMarketIndices: () => axiosInstance.get<MarketIndex[]>(`/stocks/indices`),
 };

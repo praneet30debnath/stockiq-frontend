@@ -45,7 +45,15 @@ export interface HistoricalData {
   data: OHLCVData[];
 }
 
-export type TimeRange = '1d' | '5d' | '1mo' | '3mo' | '6mo' | '1y' | '5y';
+export interface MarketIndex {
+  symbol: string;
+  name: string;
+  currentPrice: number;
+  change: number;
+  changePercent: number;
+}
+
+export type TimeRange = '1d' | '5d' | '1mo' | '3mo' | '6mo' | '1y' | '3y' | '5y' | 'max';
 export type TimeInterval = '1m' | '5m' | '1h' | '1d' | '1wk' | '1mo';
 
 // Portfolio Types

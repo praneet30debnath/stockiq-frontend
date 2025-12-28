@@ -9,6 +9,9 @@ export const portfolioApi = {
 
   getTransactions: () => axiosInstance.get<Transaction[]>(`/portfolio/transactions`),
 
+  getTransactionsBySymbol: (symbol: string) =>
+    axiosInstance.get<Transaction[]>(`/portfolio/transactions/${symbol}`),
+
   getAnalytics: () => axiosInstance.get<PortfolioAnalytics>(`/portfolio/analytics`),
 
   deleteHolding: (holdingId: number) => axiosInstance.delete(`/portfolio/holdings/${holdingId}`),
