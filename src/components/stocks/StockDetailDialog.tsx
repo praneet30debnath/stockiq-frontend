@@ -39,8 +39,10 @@ interface StockDetailDialogProps {
     currentValue: number;
     gain: number;
     gainPercent: number;
-    dayChange?: number;
-    dayChangePercent?: number;
+    dayChange?: number;              // Portfolio day change
+    dayChangePercent?: number;       // Portfolio day change %
+    marketDayChange?: number;        // Market day change
+    marketDayChangePercent?: number; // Market day change %
   } | null;
 }
 
@@ -55,6 +57,9 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
   useEffect(() => {
     if (open && stock) {
       fetchTransactions();
+    } else {
+      // Clear transactions when dialog closes
+      setTransactions([]);
     }
   }, [open, stock]);
 
@@ -74,8 +79,13 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
 
   if (!stock) return null;
 
+  // Use market day change from portfolio API (already includes correct market data)
+  const currentPrice = stock.currentPrice;
+  const dayChange = stock.marketDayChange ?? 0;
+  const dayChangePercent = stock.marketDayChangePercent ?? 0;
+
   const isProfit = stock.gain >= 0;
-  const isDayGain = (stock.dayChange || 0) >= 0;
+  const isDayGain = dayChange >= 0;
 
   return (
     <Dialog
@@ -127,16 +137,16 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 1 }}>
                   <Typography variant="h3" fontWeight="bold">
-                    {formatCurrency(stock.currentPrice)}
+                    {formatCurrency(currentPrice)}
                   </Typography>
-                  {stock.dayChange !== undefined && (
+                  {dayChange !== undefined && (
                     <Chip
                       icon={isDayGain ? <TrendingUp sx={{ fontSize: 16 }} /> : <TrendingDown sx={{ fontSize: 16 }} />}
-                      label={`${isDayGain ? '+' : ''}${formatCurrency(stock.dayChange)} (${stock.dayChangePercent ? formatPercent(stock.dayChangePercent) : '-'})`}
+                      label={`${isDayGain ? '+' : ''}${formatCurrency(dayChange)} (${dayChangePercent ? formatPercent(dayChangePercent) : '-'})`}
                       size="small"
                       sx={{
-                        background: `${getChangeColor(stock.dayChange)}15`,
-                        color: getChangeColor(stock.dayChange),
+                        background: `${getChangeColor(dayChange)}15`,
+                        color: getChangeColor(dayChange),
                         fontWeight: 600,
                       }}
                     />
@@ -159,8 +169,8 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
           >
             <StockChart
               symbol={stock.symbol}
-              dayChange={stock.dayChange}
-              dayChangePercent={stock.dayChangePercent}
+              dayChange={dayChange}
+              dayChangePercent={dayChangePercent}
             />
           </motion.div>
 
@@ -305,7 +315,7 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
                   Current Value:
                 </Typography>
                 <Typography variant="body2">
-                  {stock.quantity} shares × {formatCurrency(stock.currentPrice)} = {formatCurrency(stock.currentValue)}
+                  {stock.quantity} shares × {formatCurrency(currentPrice)} = {formatCurrency(currentPrice * stock.quantity)}
                 </Typography>
               </Box>
               <Divider sx={{ my: 1 }} />
