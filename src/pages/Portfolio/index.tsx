@@ -85,20 +85,37 @@ const Portfolio = () => {
   const [viewMode, setViewMode] = useState<PortfolioViewMode>('default');
   const [timeBasedData, setTimeBasedData] = useState<TimeBasedPortfolio | null>(null);
   const [timeBasedLoading, setTimeBasedLoading] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
   useEffect(() => {
     fetchPortfolio();
   }, []);
 
-  const fetchPortfolio = async () => {
+  // Auto-refresh default view every 15 seconds
+  useEffect(() => {
+    if (viewMode !== 'default') return;
+
+    const intervalId = setInterval(() => {
+      fetchPortfolio(true); // Silent refresh
+    }, 15000); // 15 seconds
+
+    return () => clearInterval(intervalId);
+  }, [viewMode, lastRefresh]); // Reset timer when lastRefresh changes
+
+  const fetchPortfolio = async (silent = false) => {
     try {
-      setLoading(true);
+      // Only show loading spinner if not a silent refresh and no data exists
+      if (!silent && !portfolioData) {
+        setLoading(true);
+      }
       const response = await portfolioApi.getPortfolio();
       setPortfolioData(response.data);
       setError(null);
     } catch (err: any) {
       console.error('Error fetching portfolio:', err);
-      setError(err.response?.data?.message || 'Failed to fetch portfolio data');
+      if (!silent) {
+        setError(err.response?.data?.message || 'Failed to fetch portfolio data');
+      }
     } finally {
       setLoading(false);
     }
@@ -203,7 +220,7 @@ const Portfolio = () => {
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
-        <Button variant="contained" onClick={fetchPortfolio} startIcon={<Refresh />}>
+        <Button variant="contained" onClick={() => fetchPortfolio()} startIcon={<Refresh />}>
           Retry
         </Button>
       </Box>
@@ -248,7 +265,10 @@ const Portfolio = () => {
             <Button
               variant="outlined"
               startIcon={<Refresh />}
-              onClick={fetchPortfolio}
+              onClick={() => {
+                fetchPortfolio();
+                setLastRefresh(Date.now()); // Reset auto-refresh timer
+              }}
               sx={{ borderRadius: 2 }}
             >
               Refresh
