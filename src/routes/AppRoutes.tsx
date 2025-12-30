@@ -11,7 +11,7 @@ import Watchlist from '@/pages/Watchlist';
 import Alerts from '@/pages/Alerts';
 import TaxReports from '@/pages/TaxReports';
 import Screener from '@/pages/Screener';
-import Settings from '@/pages/Settings';
+import { Settings } from '@/pages/Settings';
 
 export const AppRoutes = () => {
   return (

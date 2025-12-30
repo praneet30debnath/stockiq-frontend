@@ -10,6 +10,11 @@ export const authApi = {
 
   me: () => axiosInstance.get('/auth/me'),
 
+  getCurrentUser: () => axiosInstance.get('/auth/me'),
+
+  changePassword: (data: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
+    axiosInstance.post('/auth/change-password', data),
+
   sendOtp: (email: string) => axiosInstance.post('/auth/send-otp', { email }),
 
   verifyOtp: (email: string, otp: string) => axiosInstance.post('/auth/verify-otp', { email, otp }),
