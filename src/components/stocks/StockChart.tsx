@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Card, CardContent, Typography, CircularProgress, Alert, ToggleButtonGroup, ToggleButton, Chip } from '@mui/material';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import { stocksApi } from '@/api/endpoints/stocks.api';
 import { TimeRange } from '@/types';
 
@@ -59,13 +59,24 @@ export const StockChart: React.FC<StockChartProps> = ({ symbol, dayChange, dayCh
           const open = openPrices[index];
           if (price === null || price === undefined) return null;
 
-          const dateFormat = showYear
-            ? { day: '2-digit', month: 'short', year: '2-digit' }
-            : { day: '2-digit', month: 'short' };
+          // For 1D chart, show time instead of date
+          let dateLabel: string;
+          if (timeRange === '1d') {
+            dateLabel = new Date(timestamp * 1000).toLocaleTimeString('en-IN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true,
+            });
+          } else {
+            const dateFormat = showYear
+              ? { day: '2-digit', month: 'short', year: '2-digit' }
+              : { day: '2-digit', month: 'short' };
+            dateLabel = new Date(timestamp * 1000).toLocaleDateString('en-IN', dateFormat as any);
+          }
 
           return {
             timestamp,
-            date: new Date(timestamp * 1000).toLocaleDateString('en-IN', dateFormat as any),
+            date: dateLabel,
             price: parseFloat(price.toFixed(2)),
             open: open !== null && open !== undefined ? parseFloat(open.toFixed(2)) : undefined,
           };
@@ -105,6 +116,11 @@ export const StockChart: React.FC<StockChartProps> = ({ symbol, dayChange, dayCh
 
   const minPrice = Math.min(...chartData.map((d) => d.price));
   const maxPrice = Math.max(...chartData.map((d) => d.price));
+
+  // For 1D chart, get previous day's close (opening price of first data point)
+  const previousDayClose = timeRange === '1d' && chartData.length > 0 && chartData[0].open
+    ? chartData[0].open
+    : null;
 
   // For 1D timeframe, use the provided dayChange data if available
   // Otherwise calculate from chart data
@@ -206,7 +222,7 @@ export const StockChart: React.FC<StockChartProps> = ({ symbol, dayChange, dayCh
                 padding: '8px 12px',
               }}
               formatter={(value: number) => [`₹${value.toFixed(2)}`, 'Price']}
-              labelFormatter={(label) => `Date: ${label}`}
+              labelFormatter={(label) => `${timeRange === '1d' ? 'Time' : 'Date'}: ${label}`}
             />
             <Line
               type="monotone"
@@ -216,6 +232,22 @@ export const StockChart: React.FC<StockChartProps> = ({ symbol, dayChange, dayCh
               dot={false}
               activeDot={{ r: 4 }}
             />
+            {previousDayClose !== null && (
+              <ReferenceLine
+                y={previousDayClose}
+                stroke="#666"
+                strokeDasharray="3 3"
+                strokeWidth={1.5}
+                label={{
+                  value: `Prev Close: ₹${previousDayClose.toFixed(2)}`,
+                  position: 'insideTopRight',
+                  fill: '#666',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  offset: 10,
+                }}
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
