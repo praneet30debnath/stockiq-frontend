@@ -127,8 +127,8 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
           >
             <Card
               sx={{
-                background: `linear-gradient(135deg, ${isProfit ? '#10b98115' : '#ef444415'} 0%, ${isProfit ? '#10b98105' : '#ef444405'} 100%)`,
-                border: `1px solid ${isProfit ? '#10b98120' : '#ef444420'}`,
+                background: `linear-gradient(135deg, ${isDayGain ? '#10b98115' : '#ef444415'} 0%, ${isDayGain ? '#10b98105' : '#ef444405'} 100%)`,
+                border: `1px solid ${isDayGain ? '#10b98120' : '#ef444420'}`,
               }}
             >
               <CardContent sx={{ p: 3 }}>
