@@ -3,6 +3,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   IconButton,
   Box,
   Typography,
@@ -18,8 +19,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Button,
 } from '@mui/material';
-import { Close, TrendingUp, TrendingDown, ShoppingCart } from '@mui/icons-material';
+import { Close, TrendingUp, TrendingDown, ShoppingCart, Delete, Sell, Add } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { formatCurrency, formatPercent, getChangeColor } from '@/utils/formatters';
 import { StockChart } from './StockChart';
@@ -29,7 +31,11 @@ import { Transaction } from '@/types';
 interface StockDetailDialogProps {
   open: boolean;
   onClose: () => void;
+  onBuy?: () => void;
+  onSell?: () => void;
+  onDelete?: () => void;
   stock: {
+    id?: number;
     symbol: string;
     companyName: string;
     quantity: number;
@@ -49,6 +55,9 @@ interface StockDetailDialogProps {
 export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
   open,
   onClose,
+  onBuy,
+  onSell,
+  onDelete,
   stock,
 }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -401,6 +410,61 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
           </Box>
         </Box>
       </DialogContent>
+
+      {/* Action Buttons */}
+      {(onBuy || onSell || onDelete) && (
+        <DialogActions sx={{ px: 3, pb: 3, pt: 0, justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            {onBuy && (
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<Add />}
+                onClick={onBuy}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                Buy More
+              </Button>
+            )}
+            {onSell && (
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<Sell />}
+                onClick={onSell}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                Sell Stock
+              </Button>
+            )}
+          </Box>
+          <Box>
+            {onDelete && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<Delete />}
+                onClick={onDelete}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                Delete Holding
+              </Button>
+            )}
+          </Box>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };

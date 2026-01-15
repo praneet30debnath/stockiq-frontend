@@ -9,10 +9,8 @@ import {
   TableHead,
   TableRow,
   Chip,
-  IconButton,
   TableSortLabel,
 } from '@mui/material';
-import { Delete } from '@mui/icons-material';
 import { formatCurrency, formatPercent, getChangeColor } from '@/utils/formatters';
 import { Holding } from '@/types';
 
@@ -25,7 +23,6 @@ interface DefaultHoldingsTableProps {
   sortOrder: SortOrder;
   onSort: (field: SortField) => void;
   onRowClick: (holding: Holding) => void;
-  onDeleteClick: (holding: Holding, event: React.MouseEvent) => void;
 }
 
 export const DefaultHoldingsTable: React.FC<DefaultHoldingsTableProps> = ({
@@ -34,7 +31,6 @@ export const DefaultHoldingsTable: React.FC<DefaultHoldingsTableProps> = ({
   sortOrder,
   onSort,
   onRowClick,
-  onDeleteClick,
 }) => {
   return (
     <TableContainer>
@@ -99,11 +95,6 @@ export const DefaultHoldingsTable: React.FC<DefaultHoldingsTableProps> = ({
                   Day Change
                 </Typography>
               </TableSortLabel>
-            </TableCell>
-            <TableCell align="center">
-              <Typography variant="body2" fontWeight={700}>
-                Actions
-              </Typography>
             </TableCell>
           </TableRow>
         </TableHead>
@@ -185,20 +176,6 @@ export const DefaultHoldingsTable: React.FC<DefaultHoldingsTableProps> = ({
                 >
                   {formatPercent(holding.dayChangePercent)}
                 </Typography>
-              </TableCell>
-              <TableCell align="center">
-                <IconButton
-                  onClick={(e) => onDeleteClick(holding, e)}
-                  size="small"
-                  sx={{
-                    color: '#ef4444',
-                    '&:hover': {
-                      background: 'rgba(239, 68, 68, 0.1)',
-                    },
-                  }}
-                >
-                  <Delete fontSize="small" />
-                </IconButton>
               </TableCell>
             </TableRow>
           ))}

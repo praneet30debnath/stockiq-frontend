@@ -21,6 +21,8 @@ import { formatCurrency, formatPercent } from '@/utils/formatters';
 import { portfolioApi } from '@/api/endpoints/portfolio.api';
 import { AddTransactionDialog } from '@/components/transactions/AddTransactionDialog';
 import { StockDetailDialog } from '@/components/stocks/StockDetailDialog';
+import { BuyStockDialog } from '@/components/stocks/BuyStockDialog';
+import { SellStockDialog } from '@/components/stocks/SellStockDialog';
 import { DefaultHoldingsTable } from '@/components/portfolio/DefaultHoldingsTable';
 import { TimeBasedGainsTable } from '@/components/portfolio/TimeBasedGainsTable';
 import { Holding, PortfolioViewMode, TimeBasedPortfolio } from '@/types';
@@ -75,6 +77,8 @@ const Portfolio = () => {
   const [error, setError] = useState<string | null>(null);
   const [addTransactionOpen, setAddTransactionOpen] = useState(false);
   const [selectedStock, setSelectedStock] = useState<any>(null);
+  const [buyDialogOpen, setBuyDialogOpen] = useState(false);
+  const [sellDialogOpen, setSellDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [holdingToDelete, setHoldingToDelete] = useState<any>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -121,9 +125,17 @@ const Portfolio = () => {
     }
   };
 
-  const handleDeleteClick = (holding: any, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setHoldingToDelete(holding);
+  const handleBuyClick = () => {
+    setBuyDialogOpen(true);
+  };
+
+  const handleSellClick = () => {
+    setSellDialogOpen(true);
+  };
+
+  const handleDeleteClick = () => {
+    if (!selectedStock) return;
+    setHoldingToDelete(selectedStock);
     setDeleteConfirmOpen(true);
   };
 
@@ -135,6 +147,7 @@ const Portfolio = () => {
       await portfolioApi.deleteHolding(holdingToDelete.id);
       setDeleteConfirmOpen(false);
       setHoldingToDelete(null);
+      setSelectedStock(null); // Close the stock detail dialog
       fetchPortfolio();
     } catch (err: any) {
       console.error('Error deleting holding:', err);
@@ -385,7 +398,6 @@ const Portfolio = () => {
                 sortOrder={sortOrder}
                 onSort={handleSort}
                 onRowClick={setSelectedStock}
-                onDeleteClick={handleDeleteClick}
               />
             ) : (
               <TimeBasedGainsTable
@@ -411,6 +423,33 @@ const Portfolio = () => {
       <StockDetailDialog
         open={!!selectedStock}
         onClose={() => setSelectedStock(null)}
+        onBuy={handleBuyClick}
+        onSell={handleSellClick}
+        onDelete={handleDeleteClick}
+        stock={selectedStock}
+      />
+
+      {/* Buy Stock Dialog */}
+      <BuyStockDialog
+        open={buyDialogOpen}
+        onClose={() => setBuyDialogOpen(false)}
+        onSuccess={() => {
+          setBuyDialogOpen(false);
+          setSelectedStock(null);
+          fetchPortfolio();
+        }}
+        stock={selectedStock}
+      />
+
+      {/* Sell Stock Dialog */}
+      <SellStockDialog
+        open={sellDialogOpen}
+        onClose={() => setSellDialogOpen(false)}
+        onSuccess={() => {
+          setSellDialogOpen(false);
+          setSelectedStock(null);
+          fetchPortfolio();
+        }}
         stock={selectedStock}
       />
 
