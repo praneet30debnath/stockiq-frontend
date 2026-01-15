@@ -8,7 +8,7 @@
  * 3. Copy the "CM" (Capital Market) section
  * 4. Update the MARKET_HOLIDAYS array below
  *
- * Last updated: December 2024
+ * Last updated: January 2026
  */
 
 export interface MarketHoliday {
@@ -22,45 +22,27 @@ export interface MarketHoliday {
  * Source: NSE API (CM section)
  */
 const MARKET_HOLIDAYS: MarketHoliday[] = [
-  // 2024 Holidays
-  { date: '2024-01-26', day: 'Friday', occasion: 'Republic Day' },
-  { date: '2024-03-08', day: 'Friday', occasion: 'Mahashivratri' },
-  { date: '2024-03-25', day: 'Monday', occasion: 'Holi' },
-  { date: '2024-03-29', day: 'Friday', occasion: 'Good Friday' },
-  { date: '2024-04-11', day: 'Thursday', occasion: 'Id-Ul-Fitr (Ramadan Eid)' },
-  { date: '2024-04-17', day: 'Wednesday', occasion: 'Shri Ram Navami' },
-  { date: '2024-04-21', day: 'Sunday', occasion: 'Mahavir Jayanti' },
-  { date: '2024-05-01', day: 'Wednesday', occasion: 'Maharashtra Day' },
-  { date: '2024-05-23', day: 'Thursday', occasion: 'Buddha Pournima' },
-  { date: '2024-06-17', day: 'Monday', occasion: 'Bakri Id' },
-  { date: '2024-07-17', day: 'Wednesday', occasion: 'Moharram' },
-  { date: '2024-08-15', day: 'Thursday', occasion: 'Independence Day' },
-  { date: '2024-10-02', day: 'Wednesday', occasion: 'Mahatma Gandhi Jayanti' },
-  { date: '2024-10-12', day: 'Saturday', occasion: 'Dussehra' },
-  { date: '2024-11-01', day: 'Friday', occasion: 'Diwali - Laxmi Pujan' },
-  { date: '2024-11-02', day: 'Saturday', occasion: 'Diwali - Balipratipada' },
-  { date: '2024-11-15', day: 'Friday', occasion: 'Gurunanak Jayanti' },
-  { date: '2024-12-25', day: 'Wednesday', occasion: 'Christmas' },
-
-  // 2025 Holidays (from NSE API - CM section)
-  { date: '2025-01-26', day: 'Sunday', occasion: 'Republic Day' },
-  { date: '2025-02-26', day: 'Wednesday', occasion: 'Mahashivratri' },
-  { date: '2025-03-14', day: 'Friday', occasion: 'Holi' },
-  { date: '2025-03-31', day: 'Monday', occasion: 'Id-Ul-Fitr (Ramadan Eid)' },
-  { date: '2025-04-06', day: 'Sunday', occasion: 'Shri Ram Navami' },
-  { date: '2025-04-10', day: 'Thursday', occasion: 'Shri Mahavir Jayanti' },
-  { date: '2025-04-14', day: 'Monday', occasion: 'Dr. Baba Saheb Ambedkar Jayanti' },
-  { date: '2025-04-18', day: 'Friday', occasion: 'Good Friday' },
-  { date: '2025-05-01', day: 'Thursday', occasion: 'Maharashtra Day' },
-  { date: '2025-06-07', day: 'Saturday', occasion: 'Bakri Id' },
-  { date: '2025-07-06', day: 'Sunday', occasion: 'Muharram' },
-  { date: '2025-08-15', day: 'Friday', occasion: 'Independence Day / Parsi New Year' },
-  { date: '2025-08-27', day: 'Wednesday', occasion: 'Shri Ganesh Chaturthi' },
-  { date: '2025-10-02', day: 'Thursday', occasion: 'Mahatma Gandhi Jayanti/Dussehra' },
-  { date: '2025-10-21', day: 'Tuesday', occasion: 'Diwali Laxmi Pujan' },
-  { date: '2025-10-22', day: 'Wednesday', occasion: 'Balipratipada' },
-  { date: '2025-11-05', day: 'Wednesday', occasion: 'Prakash Gurpurb Sri Guru Nanak Dev' },
-  { date: '2025-12-25', day: 'Thursday', occasion: 'Christmas' },
+  // 2026 Holidays (from NSE API - CM section)
+  { date: '2026-01-15', day: 'Thursday', occasion: 'Municipal Corporation Election - Maharashtra' },
+  { date: '2026-01-26', day: 'Monday', occasion: 'Republic Day' },
+  { date: '2026-02-15', day: 'Sunday', occasion: 'Mahashivratri' },
+  { date: '2026-03-03', day: 'Tuesday', occasion: 'Holi' },
+  { date: '2026-03-21', day: 'Saturday', occasion: 'Id-Ul-Fitr (Ramadan Eid)' },
+  { date: '2026-03-26', day: 'Thursday', occasion: 'Shri Ram Navami' },
+  { date: '2026-03-31', day: 'Tuesday', occasion: 'Shri Mahavir Jayanti' },
+  { date: '2026-04-03', day: 'Friday', occasion: 'Good Friday' },
+  { date: '2026-04-14', day: 'Tuesday', occasion: 'Dr. Baba Saheb Ambedkar Jayanti' },
+  { date: '2026-05-01', day: 'Friday', occasion: 'Maharashtra Day' },
+  { date: '2026-05-28', day: 'Thursday', occasion: 'Bakri Id' },
+  { date: '2026-06-26', day: 'Friday', occasion: 'Muharram' },
+  { date: '2026-08-15', day: 'Saturday', occasion: 'Independence Day' },
+  { date: '2026-09-14', day: 'Monday', occasion: 'Ganesh Chaturthi' },
+  { date: '2026-10-02', day: 'Friday', occasion: 'Mahatma Gandhi Jayanti' },
+  { date: '2026-10-20', day: 'Tuesday', occasion: 'Dussehra' },
+  { date: '2026-11-08', day: 'Sunday', occasion: 'Diwali Laxmi Pujan*' },
+  { date: '2026-11-10', day: 'Tuesday', occasion: 'Diwali-Balipratipada' },
+  { date: '2026-11-24', day: 'Tuesday', occasion: 'Prakash Gurpurb Sri Guru Nanak Dev' },
+  { date: '2026-12-25', day: 'Friday', occasion: 'Christmas' },
 ];
 
 /**
