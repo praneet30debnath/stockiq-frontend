@@ -136,16 +136,19 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
       setLoading(true);
       setError(null);
 
+      // Ensure symbol is uppercase
+      const symbol = data.symbol.toUpperCase();
+
       // Validate stock on selected exchange before submitting
-      const validationResponse = await stocksApi.validateStockOnExchange(data.symbol, data.exchange);
+      const validationResponse = await stocksApi.validateStockOnExchange(symbol, data.exchange);
       if (!validationResponse.data.data) {
-        setError(`${data.symbol} is not available on ${data.exchange}. Please check the symbol or select a different exchange.`);
+        setError(`${symbol} is not available on ${data.exchange}. Please check the symbol or select a different exchange.`);
         setLoading(false);
         return;
       }
 
       const transactionData: TransactionRequest = {
-        symbol: data.symbol,
+        symbol: symbol,
         transactionType: data.transactionType,
         quantity: data.quantity,
         price: data.price,
@@ -278,7 +281,7 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
                   }
                   loading={stockSearchLoading || validatingStock}
                   onInputChange={(_, newValue) => {
-                    const symbolValue = newValue.split(' - ')[0];
+                    const symbolValue = newValue.split(' - ')[0].toUpperCase();
                     field.onChange(symbolValue);
                     handleStockSearch(newValue);
                     // Validate on the selected exchange after a short delay
@@ -304,6 +307,10 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
                             {params.InputProps.endAdornment}
                           </>
                         ),
+                      }}
+                      inputProps={{
+                        ...params.inputProps,
+                        style: { textTransform: 'uppercase' },
                       }}
                     />
                   )}
