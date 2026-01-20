@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,12 +12,14 @@ import {
   InputAdornment,
   CircularProgress,
   Chip,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp } from '@mui/icons-material';
 import { portfolioApi } from '@/api/endpoints/portfolio.api';
-import { TransactionRequest } from '@/types';
+import { TransactionRequest, Exchange } from '@/types';
 import { isMarketOpen } from '@/utils/marketHolidays';
 
 interface BuyStockDialogProps {
@@ -29,6 +31,7 @@ interface BuyStockDialogProps {
     companyName: string;
     quantity: number;
     currentPrice: number;
+    exchange?: 'NSE' | 'BSE';
   } | null;
 }
 
@@ -37,6 +40,7 @@ interface FormData {
   price: number;
   transactionDate: string;
   notes?: string;
+  exchange: Exchange;
 }
 
 export const BuyStockDialog: React.FC<BuyStockDialogProps> = ({
@@ -54,14 +58,34 @@ export const BuyStockDialog: React.FC<BuyStockDialogProps> = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
       quantity: 1,
       price: stock?.currentPrice || 0,
       transactionDate: new Date().toISOString().split('T')[0],
+      exchange: stock?.exchange || 'NSE',
     },
   });
+
+  // Update form when stock changes (especially exchange)
+  useEffect(() => {
+    if (stock && open) {
+      reset({
+        quantity: 1,
+        price: stock.currentPrice || 0,
+        transactionDate: new Date().toISOString().split('T')[0],
+        exchange: stock.exchange || 'NSE',
+      });
+    }
+  }, [stock, open, reset]);
+
+  const handleExchangeChange = (_event: React.MouseEvent<HTMLElement>, newExchange: Exchange | null) => {
+    if (newExchange !== null) {
+      setValue('exchange', newExchange);
+    }
+  };
 
   const quantity = watch('quantity');
   const price = watch('price');
@@ -84,6 +108,7 @@ export const BuyStockDialog: React.FC<BuyStockDialogProps> = ({
         stt: 0,
         otherCharges: 0,
         notes: data.notes,
+        exchange: data.exchange,
       };
 
       await portfolioApi.addTransaction(transactionData);
@@ -106,6 +131,7 @@ export const BuyStockDialog: React.FC<BuyStockDialogProps> = ({
       quantity: 1,
       price: stock?.currentPrice || 0,
       transactionDate: new Date().toISOString().split('T')[0],
+      exchange: stock?.exchange || 'NSE',
     });
     setError(null);
     setSuccess(false);
@@ -187,6 +213,42 @@ export const BuyStockDialog: React.FC<BuyStockDialogProps> = ({
                   }}
                 />
               </Box>
+            </Box>
+
+            {/* Exchange Selector */}
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Exchange
+              </Typography>
+              <Controller
+                name="exchange"
+                control={control}
+                render={({ field }) => (
+                  <ToggleButtonGroup
+                    value={field.value}
+                    exclusive
+                    onChange={handleExchangeChange}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      '& .MuiToggleButton-root': {
+                        py: 1,
+                        fontWeight: 600,
+                        '&.Mui-selected': {
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          color: 'white',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #0d9668 0%, #047857 100%)',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="NSE">NSE</ToggleButton>
+                    <ToggleButton value="BSE">BSE</ToggleButton>
+                  </ToggleButtonGroup>
+                )}
+              />
             </Box>
 
             {/* Quantity and Price */}

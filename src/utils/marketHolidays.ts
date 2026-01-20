@@ -139,3 +139,55 @@ export const getNextTradingDay = (fromDate: string | Date): string => {
 export const getHolidaysForYear = (year: number): MarketHoliday[] => {
   return MARKET_HOLIDAYS.filter(h => h.date.startsWith(year.toString()));
 };
+
+/**
+ * Check if the market is currently open (real-time check)
+ * Indian stock market (NSE/BSE) trading hours: 9:15 AM - 3:30 PM IST
+ * Checks: weekend, holiday, and trading hours
+ * @returns Object with isOpen flag and reason if closed
+ */
+export const isMarketCurrentlyOpen = (): { isOpen: boolean; reason?: string } => {
+  const now = new Date();
+
+  // Get current time in IST
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
+  const istTime = new Date(utcTime + istOffset);
+
+  // Get today's date string in YYYY-MM-DD format
+  const year = istTime.getFullYear();
+  const month = String(istTime.getMonth() + 1).padStart(2, '0');
+  const day = String(istTime.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+
+  // Check if it's a trading day (not weekend, not holiday)
+  const tradingDayCheck = isMarketOpen(todayStr);
+  if (!tradingDayCheck.isOpen) {
+    return tradingDayCheck;
+  }
+
+  // Check trading hours
+  const hours = istTime.getHours();
+  const minutes = istTime.getMinutes();
+  const currentMinutes = hours * 60 + minutes;
+
+  // Market hours: 9:15 AM (555 mins) to 3:30 PM (930 mins) IST
+  const marketOpen = 9 * 60 + 15;   // 9:15 AM = 555 minutes
+  const marketClose = 15 * 60 + 30; // 3:30 PM = 930 minutes
+
+  if (currentMinutes < marketOpen) {
+    return {
+      isOpen: false,
+      reason: 'Market opens at 9:15 AM IST',
+    };
+  }
+
+  if (currentMinutes >= marketClose) {
+    return {
+      isOpen: false,
+      reason: 'Market closed at 3:30 PM IST',
+    };
+  }
+
+  return { isOpen: true };
+};

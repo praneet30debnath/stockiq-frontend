@@ -16,12 +16,14 @@ import {
   InputAdornment,
   Autocomplete,
   CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { portfolioApi } from '@/api/endpoints/portfolio.api';
 import { stocksApi } from '@/api/endpoints/stocks.api';
-import { TransactionRequest } from '@/types';
+import { TransactionRequest, Exchange } from '@/types';
 import { isMarketOpen } from '@/utils/marketHolidays';
 
 interface AddTransactionDialogProps {
@@ -40,6 +42,7 @@ interface FormData {
   stt?: number;
   otherCharges?: number;
   notes?: string;
+  exchange: Exchange;
 }
 
 export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
@@ -52,12 +55,15 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
   const [success, setSuccess] = useState(false);
   const [stockOptions, setStockOptions] = useState<any[]>([]);
   const [stockSearchLoading, setStockSearchLoading] = useState(false);
+  const [validatingStock, setValidatingStock] = useState(false);
+  const [stockValidationError, setStockValidationError] = useState<string | null>(null);
 
   const {
     control,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
@@ -66,12 +72,46 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
       brokerage: 0,
       stt: 0,
       otherCharges: 0,
+      exchange: 'NSE',
     },
   });
 
   const quantity = watch('quantity');
   const price = watch('price');
+  const symbol = watch('symbol');
+  const exchange = watch('exchange');
   const totalAmount = quantity && price ? quantity * price : 0;
+
+  const validateStockOnExchange = async (symbolToValidate: string, exchangeToValidate: Exchange) => {
+    if (!symbolToValidate || symbolToValidate.length < 2) {
+      setStockValidationError(null);
+      return;
+    }
+
+    try {
+      setValidatingStock(true);
+      setStockValidationError(null);
+      const response = await stocksApi.validateStockOnExchange(symbolToValidate, exchangeToValidate);
+      if (!response.data.data) {
+        setStockValidationError(`${symbolToValidate} is not available on ${exchangeToValidate}`);
+      }
+    } catch (err) {
+      console.error('Error validating stock:', err);
+      setStockValidationError(`Unable to validate stock on ${exchangeToValidate}`);
+    } finally {
+      setValidatingStock(false);
+    }
+  };
+
+  const handleExchangeChange = (_event: React.MouseEvent<HTMLElement>, newExchange: Exchange | null) => {
+    if (newExchange !== null) {
+      setValue('exchange', newExchange);
+      // Re-validate stock on the new exchange
+      if (symbol && symbol.length >= 2) {
+        validateStockOnExchange(symbol, newExchange);
+      }
+    }
+  };
 
   const handleStockSearch = async (searchQuery: string) => {
     if (!searchQuery || searchQuery.length < 2) {
@@ -96,6 +136,14 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
       setLoading(true);
       setError(null);
 
+      // Validate stock on selected exchange before submitting
+      const validationResponse = await stocksApi.validateStockOnExchange(data.symbol, data.exchange);
+      if (!validationResponse.data.data) {
+        setError(`${data.symbol} is not available on ${data.exchange}. Please check the symbol or select a different exchange.`);
+        setLoading(false);
+        return;
+      }
+
       const transactionData: TransactionRequest = {
         symbol: data.symbol,
         transactionType: data.transactionType,
@@ -106,6 +154,7 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
         stt: data.stt || 0,
         otherCharges: data.otherCharges || 0,
         notes: data.notes,
+        exchange: data.exchange,
       };
 
       await portfolioApi.addTransaction(transactionData);
@@ -128,6 +177,7 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
     setError(null);
     setSuccess(false);
     setStockOptions([]);
+    setStockValidationError(null);
     onClose();
   };
 
@@ -175,6 +225,45 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
               </Alert>
             )}
 
+            {/* Exchange Selector */}
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Exchange
+              </Typography>
+              <Controller
+                name="exchange"
+                control={control}
+                render={({ field }) => (
+                  <ToggleButtonGroup
+                    value={field.value}
+                    exclusive
+                    onChange={handleExchangeChange}
+                    fullWidth
+                    sx={{
+                      '& .MuiToggleButton-root': {
+                        py: 1.5,
+                        fontWeight: 600,
+                        '&.Mui-selected': {
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: 'white',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%)',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="NSE">
+                      NSE (National Stock Exchange)
+                    </ToggleButton>
+                    <ToggleButton value="BSE">
+                      BSE (Bombay Stock Exchange)
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                )}
+              />
+            </Box>
+
             {/* Stock Symbol with Autocomplete */}
             <Controller
               name="symbol"
@@ -187,10 +276,17 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
                   getOptionLabel={(option) =>
                     typeof option === 'string' ? option : `${option.symbol} - ${option.companyName}`
                   }
-                  loading={stockSearchLoading}
+                  loading={stockSearchLoading || validatingStock}
                   onInputChange={(_, newValue) => {
-                    field.onChange(newValue.split(' - ')[0]);
+                    const symbolValue = newValue.split(' - ')[0];
+                    field.onChange(symbolValue);
                     handleStockSearch(newValue);
+                    // Validate on the selected exchange after a short delay
+                    if (symbolValue && symbolValue.length >= 2) {
+                      setTimeout(() => validateStockOnExchange(symbolValue, exchange), 500);
+                    } else {
+                      setStockValidationError(null);
+                    }
                   }}
                   renderInput={(params) => (
                     <TextField
@@ -198,13 +294,13 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
                       label="Stock Symbol"
                       placeholder="Search stock (e.g., RELIANCE, TCS)"
                       required
-                      error={!!errors.symbol}
-                      helperText={errors.symbol?.message}
+                      error={!!errors.symbol || !!stockValidationError}
+                      helperText={errors.symbol?.message || stockValidationError}
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (
                           <>
-                            {stockSearchLoading ? <CircularProgress size={20} /> : null}
+                            {(stockSearchLoading || validatingStock) ? <CircularProgress size={20} /> : null}
                             {params.InputProps.endAdornment}
                           </>
                         ),

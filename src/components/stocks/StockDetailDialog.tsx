@@ -26,7 +26,7 @@ import { motion } from 'framer-motion';
 import { formatCurrency, formatPercent, getChangeColor } from '@/utils/formatters';
 import { StockChart } from './StockChart';
 import { portfolioApi } from '@/api/endpoints/portfolio.api';
-import { Transaction } from '@/types';
+import { Transaction, Exchange } from '@/types';
 
 interface StockDetailDialogProps {
   open: boolean;
@@ -49,6 +49,7 @@ interface StockDetailDialogProps {
     dayChangePercent?: number;       // Portfolio day change %
     marketDayChange?: number;        // Market day change
     marketDayChangePercent?: number; // Market day change %
+    exchange?: Exchange;             // Stock exchange (NSE or BSE)
   } | null;
 }
 
@@ -180,6 +181,7 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
               symbol={stock.symbol}
               dayChange={dayChange}
               dayChangePercent={dayChangePercent}
+              exchange={stock.exchange || 'NSE'}
             />
           </motion.div>
 
@@ -367,6 +369,7 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
                     <TableRow>
                       <TableCell>Date</TableCell>
                       <TableCell>Type</TableCell>
+                      <TableCell>Exchange</TableCell>
                       <TableCell align="right">Quantity</TableCell>
                       <TableCell align="right">Price</TableCell>
                       <TableCell align="right">Total</TableCell>
@@ -388,6 +391,18 @@ export const StockDetailDialog: React.FC<StockDetailDialogProps> = ({
                               background: transaction.transactionType === 'BUY' ? '#10b98115' : '#ef444415',
                               color: transaction.transactionType === 'BUY' ? '#10b981' : '#ef4444',
                               fontWeight: 600,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={transaction.exchange || 'NSE'}
+                            size="small"
+                            sx={{
+                              background: transaction.exchange === 'BSE' ? '#f59e0b15' : '#3b82f615',
+                              color: transaction.exchange === 'BSE' ? '#f59e0b' : '#3b82f6',
+                              fontWeight: 600,
+                              fontSize: '0.7rem',
                             }}
                           />
                         </TableCell>

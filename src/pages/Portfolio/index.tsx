@@ -18,6 +18,7 @@ import {
 import { Add, TrendingUp, TrendingDown, Refresh, AccountBalance, Assessment } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { formatCurrency, formatPercent } from '@/utils/formatters';
+import { isMarketCurrentlyOpen } from '@/utils/marketHolidays';
 import { portfolioApi } from '@/api/endpoints/portfolio.api';
 import { AddTransactionDialog } from '@/components/transactions/AddTransactionDialog';
 import { StockDetailDialog } from '@/components/stocks/StockDetailDialog';
@@ -95,12 +96,15 @@ const Portfolio = () => {
     fetchPortfolio();
   }, []);
 
-  // Auto-refresh default view every 15 seconds
+  // Auto-refresh default view every 15 seconds (only when market is open)
   useEffect(() => {
     if (viewMode !== 'default') return;
 
     const intervalId = setInterval(() => {
-      fetchPortfolio(true); // Silent refresh
+      const marketStatus = isMarketCurrentlyOpen();
+      if (marketStatus.isOpen) {
+        fetchPortfolio(true); // Silent refresh only when market is open
+      }
     }, 15000); // 15 seconds
 
     return () => clearInterval(intervalId);

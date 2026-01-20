@@ -70,6 +70,7 @@ export interface Holding {
   gainPercent: number;
   dayChange: number;
   dayChangePercent: number;
+  exchange?: Exchange;
 }
 
 export interface Portfolio {
@@ -81,6 +82,8 @@ export interface Portfolio {
   dayChangePercent: number;
   holdings: Holding[];
 }
+
+export type Exchange = 'NSE' | 'BSE';
 
 export interface Transaction {
   id: number;
@@ -95,6 +98,7 @@ export interface Transaction {
   stt: number;
   otherCharges: number;
   notes?: string;
+  exchange: Exchange;
 }
 
 export interface TransactionRequest {
@@ -107,6 +111,7 @@ export interface TransactionRequest {
   stt?: number;
   otherCharges?: number;
   notes?: string;
+  exchange?: Exchange;
 }
 
 export interface PortfolioAnalytics {

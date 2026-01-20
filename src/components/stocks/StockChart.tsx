@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { Box, Card, CardContent, Typography, CircularProgress, Alert, ToggleButtonGroup, ToggleButton, Chip } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import { stocksApi } from '@/api/endpoints/stocks.api';
-import { TimeRange } from '@/types';
+import { TimeRange, Exchange } from '@/types';
 
 interface StockChartProps {
   symbol: string;
   dayChange?: number;
   dayChangePercent?: number;
+  exchange?: Exchange;
 }
 
 interface ChartDataPoint {
@@ -17,7 +18,7 @@ interface ChartDataPoint {
   timestamp: number;
 }
 
-export const StockChart: React.FC<StockChartProps> = ({ symbol, dayChange, dayChangePercent }) => {
+export const StockChart: React.FC<StockChartProps> = ({ symbol, dayChange, dayChangePercent, exchange = 'NSE' }) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export const StockChart: React.FC<StockChartProps> = ({ symbol, dayChange, dayCh
 
   useEffect(() => {
     fetchChartData();
-  }, [symbol, timeRange]);
+  }, [symbol, timeRange, exchange]);
 
   const fetchChartData = async () => {
     try {
@@ -39,7 +40,7 @@ export const StockChart: React.FC<StockChartProps> = ({ symbol, dayChange, dayCh
                        timeRange === '6mo' || timeRange === '1y' ? '1d' :
                        '1wk'; // For 3y, 5y, and max
 
-      const response = await stocksApi.getHistoricalData(symbol, timeRange, interval);
+      const response = await stocksApi.getHistoricalData(symbol, timeRange, interval, exchange);
 
       // If response.data is a string, parse it; otherwise use it directly
       const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
