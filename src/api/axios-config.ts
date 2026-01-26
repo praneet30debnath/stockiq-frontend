@@ -32,7 +32,8 @@ axiosInstance.interceptors.response.use(
     const requestUrl = error.config?.url || '';
 
     // Handle 401 Unauthorized
-    if (status === 401) {
+    // Skip redirect for login requests - let the login form handle its own error
+    if (status === 401 && !requestUrl.includes('/auth/login')) {
       localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER_DATA);
       toast.error('Your session has expired. Please login again.', {
@@ -40,7 +41,7 @@ axiosInstance.interceptors.response.use(
       });
       setTimeout(() => {
         window.location.href = '/login';
-      }, 500);
+      }, 4000);
       return Promise.reject(error);
     }
 
