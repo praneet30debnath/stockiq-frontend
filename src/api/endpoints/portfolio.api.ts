@@ -5,6 +5,7 @@ export interface TransactionFilters {
   startDate?: string;
   endDate?: string;
   type?: 'ALL' | 'BUY' | 'SELL';
+  symbols?: string[];
 }
 
 export const portfolioApi = {
@@ -20,10 +21,15 @@ export const portfolioApi = {
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
     if (filters?.type && filters.type !== 'ALL') params.append('type', filters.type);
+    if (filters?.symbols && filters.symbols.length > 0) {
+      filters.symbols.forEach(symbol => params.append('symbols', symbol));
+    }
 
     const queryString = params.toString();
     return axiosInstance.get<Transaction[]>(`/portfolio/transactions${queryString ? `?${queryString}` : ''}`);
   },
+
+  getTransactionSymbols: () => axiosInstance.get<string[]>(`/portfolio/transactions/symbols`),
 
   getTransactionsBySymbol: (symbol: string) =>
     axiosInstance.get<Transaction[]>(`/portfolio/transactions/${symbol}`),

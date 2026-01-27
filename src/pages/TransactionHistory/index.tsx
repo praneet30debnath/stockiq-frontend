@@ -18,6 +18,7 @@ import {
   TableRow,
   TableSortLabel,
   Chip,
+  Autocomplete,
 } from '@mui/material';
 import { Refresh, Clear } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -34,18 +35,41 @@ const TransactionHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Available symbols for dropdown
+  const [availableSymbols, setAvailableSymbols] = useState<string[]>([]);
+  const [symbolsLoading, setSymbolsLoading] = useState(true);
+
   // Filters
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>('ALL');
+  const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);
 
   // Sorting
   const [sortField, setSortField] = useState<SortField>('transactionDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
+  // Fetch available symbols on mount
+  useEffect(() => {
+    fetchAvailableSymbols();
+  }, []);
+
+  // Fetch transactions when filters change
   useEffect(() => {
     fetchTransactions();
-  }, [startDate, endDate, typeFilter]);
+  }, [startDate, endDate, typeFilter, selectedSymbols]);
+
+  const fetchAvailableSymbols = async () => {
+    try {
+      setSymbolsLoading(true);
+      const response = await portfolioApi.getTransactionSymbols();
+      setAvailableSymbols(response.data);
+    } catch (err) {
+      console.error('Error fetching symbols:', err);
+    } finally {
+      setSymbolsLoading(false);
+    }
+  };
 
   const fetchTransactions = async () => {
     try {
@@ -56,6 +80,7 @@ const TransactionHistory = () => {
       if (startDate) filters.startDate = startDate;
       if (endDate) filters.endDate = endDate;
       if (typeFilter !== 'ALL') filters.type = typeFilter;
+      if (selectedSymbols.length > 0) filters.symbols = selectedSymbols;
 
       const response = await portfolioApi.getTransactions(filters);
       setTransactions(response.data);
@@ -80,6 +105,7 @@ const TransactionHistory = () => {
     setStartDate('');
     setEndDate('');
     setTypeFilter('ALL');
+    setSelectedSymbols([]);
   };
 
   const handleSort = (field: SortField) => {
@@ -113,7 +139,7 @@ const TransactionHistory = () => {
     });
   }, [transactions, sortField, sortOrder]);
 
-  const hasActiveFilters = startDate || endDate || typeFilter !== 'ALL';
+  const hasActiveFilters = startDate || endDate || typeFilter !== 'ALL' || selectedSymbols.length > 0;
 
   return (
     <Box>
@@ -179,6 +205,35 @@ const TransactionHistory = () => {
                 InputLabelProps={{ shrink: true }}
                 size="small"
                 sx={{ minWidth: 160 }}
+              />
+              <Autocomplete
+                multiple
+                options={availableSymbols}
+                value={selectedSymbols}
+                onChange={(_, newValue) => setSelectedSymbols(newValue)}
+                loading={symbolsLoading}
+                size="small"
+                limitTags={2}
+                disableCloseOnSelect
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Stocks"
+                    placeholder={selectedSymbols.length === 0 ? "All stocks" : ""}
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      {...getTagProps({ index })}
+                      key={option}
+                      label={option}
+                      size="small"
+                      sx={{ fontWeight: 500 }}
+                    />
+                  ))
+                }
+                sx={{ minWidth: 220 }}
               />
               <ToggleButtonGroup
                 value={typeFilter}
