@@ -373,6 +373,7 @@ const TransactionHistory = () => {
                           Exchange
                         </TableSortLabel>
                       </TableCell>
+                      <TableCell>Notes</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -434,6 +435,21 @@ const TransactionHistory = () => {
                             variant="outlined"
                             sx={{ fontWeight: 500 }}
                           />
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              maxWidth: 200,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title={transaction.notes || ''}
+                          >
+                            {transaction.notes || '-'}
+                          </Typography>
                         </TableCell>
                       </TableRow>
                     ))}
