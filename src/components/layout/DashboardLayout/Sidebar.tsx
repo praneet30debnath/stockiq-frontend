@@ -14,6 +14,7 @@ import {
 import {
   Dashboard as DashboardIcon,
   AccountBalance,
+  Receipt,
   Visibility,
   Notifications,
   Assessment,
@@ -27,6 +28,7 @@ import { ROUTES } from '@/routes/routes.config';
 const menuItems = [
   { label: 'Dashboard', icon: <DashboardIcon />, path: ROUTES.DASHBOARD },
   { label: 'Portfolio', icon: <AccountBalance />, path: ROUTES.PORTFOLIO },
+  { label: 'Transactions', icon: <Receipt />, path: ROUTES.TRANSACTION_HISTORY },
   { label: 'Watchlist', icon: <Visibility />, path: ROUTES.WATCHLIST },
   { label: 'Alerts', icon: <Notifications />, path: ROUTES.ALERTS },
   { label: 'Tax Reports', icon: <Assessment />, path: ROUTES.TAX_REPORTS },

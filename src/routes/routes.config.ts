@@ -4,6 +4,7 @@ export const ROUTES = {
   REGISTER: '/register',
   DASHBOARD: '/dashboard',
   PORTFOLIO: '/portfolio',
+  TRANSACTION_HISTORY: '/transactions',
   STOCK_DETAILS: '/stocks/:symbol',
   WATCHLIST: '/watchlist',
   ALERTS: '/alerts',

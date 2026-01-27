@@ -7,6 +7,7 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
 import Portfolio from '@/pages/Portfolio';
+import TransactionHistory from '@/pages/TransactionHistory';
 import Watchlist from '@/pages/Watchlist';
 import Alerts from '@/pages/Alerts';
 import TaxReports from '@/pages/TaxReports';
@@ -24,6 +25,7 @@ export const AppRoutes = () => {
         <Route element={<PrivateRoute />}>
           <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
           <Route path={ROUTES.PORTFOLIO} element={<Portfolio />} />
+          <Route path={ROUTES.TRANSACTION_HISTORY} element={<TransactionHistory />} />
           <Route path={ROUTES.WATCHLIST} element={<Watchlist />} />
           <Route path={ROUTES.ALERTS} element={<Alerts />} />
           <Route path={ROUTES.TAX_REPORTS} element={<TaxReports />} />
