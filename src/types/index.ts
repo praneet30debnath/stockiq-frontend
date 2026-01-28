@@ -231,6 +231,105 @@ export interface TaxSummary {
 }
 
 // Screener Types
+export interface ScreenerStock {
+  id: number;
+  symbol: string;
+  companyName: string;
+  marketType: 'MAINBOARD' | 'SME' | null;
+  exchangeSuffix: string | null;
+
+  // NSE Data
+  marketCap: number | null;
+  issuedShares: number | null;
+  faceValue: number | null;
+  industry: string | null;
+
+  // Yahoo Finance Data
+  ltp: number | null;
+  volume: number | null;
+  fiftyTwoWeekHigh: number | null;
+  fiftyTwoWeekLow: number | null;
+
+  // Time Gains (percentage)
+  gain1D: number | null;
+  gain5D: number | null;
+  gain1M: number | null;
+  gain3M: number | null;
+  gain6M: number | null;
+  gain1Y: number | null;
+  gain5Y: number | null;
+
+  // Timestamps
+  nseDataUpdatedAt: string | null;
+  yahooDataUpdatedAt: string | null;
+}
+
+export interface ScreenerFilter {
+  search?: string;
+  marketType?: 'MAINBOARD' | 'SME';
+  industries?: string[];
+
+  // Price range
+  minPrice?: number;
+  maxPrice?: number;
+
+  // Market cap range
+  minMarketCap?: number;
+  maxMarketCap?: number;
+
+  // Volume range
+  minVolume?: number;
+  maxVolume?: number;
+
+  // Gain ranges
+  minGain1D?: number;
+  maxGain1D?: number;
+  minGain5D?: number;
+  maxGain5D?: number;
+  minGain1M?: number;
+  maxGain1M?: number;
+  minGain3M?: number;
+  maxGain3M?: number;
+  minGain6M?: number;
+  maxGain6M?: number;
+  minGain1Y?: number;
+  maxGain1Y?: number;
+  minGain5Y?: number;
+  maxGain5Y?: number;
+
+  // 52-week filters
+  near52WeekHigh?: boolean;
+  near52WeekLow?: boolean;
+
+  // Sorting
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+
+  // Pagination
+  page?: number;
+  size?: number;
+}
+
+export interface ScreenerStats {
+  totalStocks: number;
+  mainboardCount: number;
+  smeCount: number;
+  stocksWithYahooData: number;
+  stocksWithNSEData: number;
+  industriesCount: number;
+  lastNSEUpdate: string | null;
+  lastYahooUpdate: string | null;
+}
+
+export interface PagedResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
 export interface ScreenerCriteria {
   minPrice?: number;
   maxPrice?: number;
