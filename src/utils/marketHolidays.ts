@@ -18,6 +18,26 @@ export interface MarketHoliday {
 }
 
 /**
+ * Special Trading Days - Weekend days when market is exceptionally open
+ * These dates override the normal weekend closure
+ */
+const SPECIAL_TRADING_DAYS: { date: string; occasion: string }[] = [
+  { date: '2026-02-01', occasion: 'Union Budget 2026 - Special Trading Session' },
+];
+
+/**
+ * Check if a date is a special trading day (weekend but market is open)
+ */
+const isSpecialTradingDay = (date: string | Date): { isSpecial: boolean; occasion?: string } => {
+  const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+  const special = SPECIAL_TRADING_DAYS.find(s => s.date === dateStr);
+  return {
+    isSpecial: !!special,
+    occasion: special?.occasion,
+  };
+};
+
+/**
  * NSE Capital Market (CM) Trading Holidays
  * Source: NSE API (CM section)
  */
@@ -80,6 +100,12 @@ export const isWeekend = (date: string | Date): boolean => {
  * @returns Object with isOpen flag and reason if closed
  */
 export const isMarketOpen = (date: string | Date): { isOpen: boolean; reason?: string } => {
+  // Check for special trading days first (weekends where market is open)
+  const specialCheck = isSpecialTradingDay(date);
+  if (specialCheck.isSpecial) {
+    return { isOpen: true, reason: specialCheck.occasion };
+  }
+
   // Check weekend
   if (isWeekend(date)) {
     const dateObj = typeof date === 'string' ? new Date(date + 'T00:00:00') : date;
