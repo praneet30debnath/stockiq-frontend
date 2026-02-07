@@ -34,7 +34,7 @@ interface AddTransactionDialogProps {
 
 interface FormData {
   symbol: string;
-  transactionType: 'BUY' | 'SELL';
+  transactionType: 'BUY' | 'SELL' | 'SPLIT' | 'BONUS';
   quantity: number;
   price: number;
   transactionDate: string;
@@ -43,6 +43,10 @@ interface FormData {
   otherCharges?: number;
   notes?: string;
   exchange: Exchange;
+  // Corporate action fields
+  splitRatio?: number;
+  oldFaceValue?: number;
+  newFaceValue?: number;
 }
 
 export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
@@ -80,7 +84,20 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
   const price = watch('price');
   const symbol = watch('symbol');
   const exchange = watch('exchange');
+  const transactionType = watch('transactionType');
+  const oldFaceValue = watch('oldFaceValue');
+  const newFaceValue = watch('newFaceValue');
   const totalAmount = quantity && price ? quantity * price : 0;
+
+  const isCorporateAction = transactionType === 'SPLIT' || transactionType === 'BONUS';
+
+  // Auto-calculate split ratio from face values
+  const handleFaceValueChange = () => {
+    if (oldFaceValue && newFaceValue && newFaceValue > 0) {
+      const calculatedRatio = oldFaceValue / newFaceValue;
+      setValue('splitRatio', calculatedRatio);
+    }
+  };
 
   const validateStockOnExchange = async (symbolToValidate: string, exchangeToValidate: Exchange) => {
     if (!symbolToValidate || symbolToValidate.length < 2) {
@@ -137,27 +154,41 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
       setError(null);
 
       // Ensure symbol is uppercase
-      const symbol = data.symbol.toUpperCase();
+      const symbolValue = data.symbol.toUpperCase();
+      const isCorporate = data.transactionType === 'SPLIT' || data.transactionType === 'BONUS';
 
-      // Validate stock on selected exchange before submitting
-      const validationResponse = await stocksApi.validateStockOnExchange(symbol, data.exchange);
-      if (!validationResponse.data.data) {
-        setError(`${symbol} is not available on ${data.exchange}. Please check the symbol or select a different exchange.`);
+      // For corporate actions, we don't validate exchange (stock must already be in portfolio)
+      if (!isCorporate) {
+        // Validate stock on selected exchange before submitting
+        const validationResponse = await stocksApi.validateStockOnExchange(symbolValue, data.exchange);
+        if (!validationResponse.data.data) {
+          setError(`${symbolValue} is not available on ${data.exchange}. Please check the symbol or select a different exchange.`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Validate split ratio for corporate actions
+      if (isCorporate && (!data.splitRatio || data.splitRatio <= 0)) {
+        setError('Split/Bonus ratio is required and must be greater than 0');
         setLoading(false);
         return;
       }
 
       const transactionData: TransactionRequest = {
-        symbol: symbol,
+        symbol: symbolValue,
         transactionType: data.transactionType,
-        quantity: data.quantity,
-        price: data.price,
+        quantity: isCorporate ? 0 : data.quantity,
+        price: isCorporate ? 0 : data.price,
         transactionDate: data.transactionDate,
-        brokerage: data.brokerage || 0,
-        stt: data.stt || 0,
-        otherCharges: data.otherCharges || 0,
+        brokerage: isCorporate ? 0 : (data.brokerage || 0),
+        stt: isCorporate ? 0 : (data.stt || 0),
+        otherCharges: isCorporate ? 0 : (data.otherCharges || 0),
         notes: data.notes,
         exchange: data.exchange,
+        splitRatio: isCorporate ? data.splitRatio : undefined,
+        oldFaceValue: isCorporate ? data.oldFaceValue : undefined,
+        newFaceValue: isCorporate ? data.newFaceValue : undefined,
       };
 
       await portfolioApi.addTransaction(transactionData);
@@ -329,59 +360,84 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
                   <Select {...field} label="Transaction Type">
                     <MenuItem value="BUY">Buy</MenuItem>
                     <MenuItem value="SELL">Sell</MenuItem>
+                    <MenuItem value="SPLIT">Stock Split</MenuItem>
+                    <MenuItem value="BONUS">Bonus Issue</MenuItem>
                   </Select>
                 </FormControl>
               )}
             />
 
-            {/* Quantity and Price */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-              <Controller
-                name="quantity"
-                control={control}
-                rules={{
-                  required: 'Quantity is required',
-                  min: { value: 1, message: 'Minimum quantity is 1' },
-                }}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Quantity"
-                    type="number"
-                    required
-                    error={!!errors.quantity}
-                    helperText={errors.quantity?.message}
-                    inputProps={{ min: 1, step: 1 }}
-                  />
-                )}
-              />
-
-              <Controller
-                name="price"
-                control={control}
-                rules={{
-                  required: 'Price is required',
-                  min: { value: 0.01, message: 'Price must be greater than 0' },
-                }}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Price per Share"
-                    type="number"
-                    required
-                    error={!!errors.price}
-                    helperText={errors.price?.message}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+            {/* Quantity and Price - only for BUY/SELL */}
+            {!isCorporateAction && (
+              <>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <Controller
+                    name="quantity"
+                    control={control}
+                    rules={{
+                      required: !isCorporateAction ? 'Quantity is required' : false,
+                      min: { value: 1, message: 'Minimum quantity is 1' },
                     }}
-                    inputProps={{ min: 0.01, step: 0.01 }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Quantity"
+                        type="number"
+                        required={!isCorporateAction}
+                        error={!!errors.quantity}
+                        helperText={errors.quantity?.message}
+                        inputProps={{ min: 1, step: 1 }}
+                      />
+                    )}
                   />
-                )}
-              />
-            </Box>
 
-            {/* Total Amount Display */}
-            {totalAmount > 0 && (
+                  <Controller
+                    name="price"
+                    control={control}
+                    rules={{
+                      required: !isCorporateAction ? 'Price is required' : false,
+                      min: { value: 0.01, message: 'Price must be greater than 0' },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Price per Share"
+                        type="number"
+                        required={!isCorporateAction}
+                        error={!!errors.price}
+                        helperText={errors.price?.message}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        }}
+                        inputProps={{ min: 0.01, step: 0.01 }}
+                      />
+                    )}
+                  />
+                </Box>
+
+                {/* Total Amount Display */}
+                {totalAmount > 0 && (
+                  <Box
+                    sx={{
+                      p: 2,
+                      background: 'rgba(102, 126, 234, 0.05)',
+                      borderRadius: 2,
+                      border: '1px solid rgba(102, 126, 234, 0.1)',
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Total Amount
+                    </Typography>
+                    <Typography variant="h5" fontWeight="bold" color="primary">
+                      ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
+                )}
+              </>
+            )}
+
+            {/* Corporate Action Fields - only for SPLIT/BONUS */}
+            {isCorporateAction && (
               <Box
                 sx={{
                   p: 2,
@@ -390,12 +446,89 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
                   border: '1px solid rgba(102, 126, 234, 0.1)',
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
-                  Total Amount
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+                  {transactionType === 'SPLIT' ? 'Stock Split Details' : 'Bonus Issue Details'}
                 </Typography>
-                <Typography variant="h5" fontWeight="bold" color="primary">
-                  ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Typography>
+
+                {transactionType === 'SPLIT' && (
+                  <>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                      Enter face value change (optional) or split ratio directly
+                    </Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+                      <Controller
+                        name="oldFaceValue"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="Old Face Value"
+                            type="number"
+                            InputProps={{
+                              startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                            }}
+                            inputProps={{ min: 0.01, step: 0.01 }}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setTimeout(handleFaceValueChange, 100);
+                            }}
+                          />
+                        )}
+                      />
+                      <Controller
+                        name="newFaceValue"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label="New Face Value"
+                            type="number"
+                            InputProps={{
+                              startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                            }}
+                            inputProps={{ min: 0.01, step: 0.01 }}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setTimeout(handleFaceValueChange, 100);
+                            }}
+                          />
+                        )}
+                      />
+                    </Box>
+                  </>
+                )}
+
+                <Controller
+                  name="splitRatio"
+                  control={control}
+                  rules={{
+                    required: isCorporateAction ? 'Ratio is required' : false,
+                    min: { value: 0.01, message: 'Ratio must be greater than 0' },
+                  }}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label={transactionType === 'SPLIT' ? 'Split Ratio (new shares per old share)' : 'Bonus Ratio (bonus shares per existing share)'}
+                      type="number"
+                      fullWidth
+                      required
+                      error={!!errors.splitRatio}
+                      helperText={
+                        errors.splitRatio?.message ||
+                        (transactionType === 'SPLIT'
+                          ? 'e.g., 10 for 10:1 split (1 share becomes 10 shares)'
+                          : 'e.g., 0.5 for 1:2 bonus (1 bonus share for every 2 held), 1 for 1:1 bonus')
+                      }
+                      inputProps={{ min: 0.01, step: 0.01 }}
+                    />
+                  )}
+                />
+
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  {transactionType === 'SPLIT'
+                    ? 'Stock split will multiply your quantity by the ratio and divide your average price by the same ratio. Total invested remains unchanged.'
+                    : 'Bonus issue will add bonus shares to your holding. Average price will be adjusted proportionally. Total invested remains unchanged.'}
+                </Alert>
               </Box>
             )}
 
@@ -426,60 +559,64 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
               )}
             />
 
-            {/* Optional Charges */}
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
-              Additional Charges (Optional)
-            </Typography>
+            {/* Optional Charges - only for BUY/SELL */}
+            {!isCorporateAction && (
+              <>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
+                  Additional Charges (Optional)
+                </Typography>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
-              <Controller
-                name="brokerage"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Brokerage"
-                    type="number"
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                    }}
-                    inputProps={{ min: 0, step: 0.01 }}
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
+                  <Controller
+                    name="brokerage"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Brokerage"
+                        type="number"
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        }}
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
+                    )}
                   />
-                )}
-              />
 
-              <Controller
-                name="stt"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="STT"
-                    type="number"
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                    }}
-                    inputProps={{ min: 0, step: 0.01 }}
+                  <Controller
+                    name="stt"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="STT"
+                        type="number"
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        }}
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
+                    )}
                   />
-                )}
-              />
 
-              <Controller
-                name="otherCharges"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Other"
-                    type="number"
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                    }}
-                    inputProps={{ min: 0, step: 0.01 }}
+                  <Controller
+                    name="otherCharges"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Other"
+                        type="number"
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        }}
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
+                    )}
                   />
-                )}
-              />
-            </Box>
+                </Box>
+              </>
+            )}
 
             {/* Notes */}
             <Controller

@@ -4,7 +4,7 @@ import { Portfolio, Transaction, TransactionRequest, PortfolioAnalytics, TimeBas
 export interface TransactionFilters {
   startDate?: string;
   endDate?: string;
-  type?: 'ALL' | 'BUY' | 'SELL';
+  type?: 'ALL' | 'BUY' | 'SELL' | 'SPLIT' | 'BONUS';
   symbols?: string[];
 }
 

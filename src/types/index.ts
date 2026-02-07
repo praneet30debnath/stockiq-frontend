@@ -89,7 +89,7 @@ export interface Transaction {
   id: number;
   symbol: string;
   companyName: string;
-  transactionType: 'BUY' | 'SELL';
+  transactionType: 'BUY' | 'SELL' | 'SPLIT' | 'BONUS';
   quantity: number;
   price: number;
   totalAmount: number;
@@ -99,11 +99,15 @@ export interface Transaction {
   otherCharges: number;
   notes?: string;
   exchange: Exchange;
+  // Corporate action fields
+  splitRatio?: number;
+  quantityBefore?: number;
+  avgPriceBefore?: number;
 }
 
 export interface TransactionRequest {
   symbol: string;
-  transactionType: 'BUY' | 'SELL';
+  transactionType: 'BUY' | 'SELL' | 'SPLIT' | 'BONUS';
   quantity: number;
   price: number;
   transactionDate: string;
@@ -112,6 +116,10 @@ export interface TransactionRequest {
   otherCharges?: number;
   notes?: string;
   exchange?: Exchange;
+  // Corporate action fields
+  splitRatio?: number;
+  oldFaceValue?: number;
+  newFaceValue?: number;
 }
 
 export interface PortfolioAnalytics {

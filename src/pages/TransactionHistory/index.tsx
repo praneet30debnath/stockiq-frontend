@@ -27,7 +27,7 @@ import { portfolioApi, TransactionFilters } from '@/api/endpoints/portfolio.api'
 import { Transaction, TransactionPLSummary } from '@/types';
 import { formatCurrency, formatDate, getChangeColor } from '@/utils/formatters';
 
-type TransactionTypeFilter = 'ALL' | 'BUY' | 'SELL';
+type TransactionTypeFilter = 'ALL' | 'BUY' | 'SELL' | 'SPLIT' | 'BONUS';
 type SortField = 'transactionDate' | 'symbol' | 'transactionType' | 'quantity' | 'price' | 'totalAmount' | 'exchange';
 type SortOrder = 'asc' | 'desc';
 
@@ -273,6 +273,8 @@ const TransactionHistory = () => {
                 <ToggleButton value="ALL">All</ToggleButton>
                 <ToggleButton value="BUY">Buy</ToggleButton>
                 <ToggleButton value="SELL">Sell</ToggleButton>
+                <ToggleButton value="SPLIT">Split</ToggleButton>
+                <ToggleButton value="BONUS">Bonus</ToggleButton>
               </ToggleButtonGroup>
               {hasActiveFilters && (
                 <Button
@@ -519,82 +521,120 @@ const TransactionHistory = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {sortedTransactions.map((transaction) => (
-                      <TableRow
-                        key={transaction.id}
-                        hover
-                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                      >
-                        <TableCell>
-                          <Typography variant="body2">
-                            {formatDate(transaction.transactionDate)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
-                              {transaction.symbol}
+                    {sortedTransactions.map((transaction) => {
+                      const isCorporateAction = transaction.transactionType === 'SPLIT' || transaction.transactionType === 'BONUS';
+
+                      const getTypeColor = (type: string) => {
+                        switch (type) {
+                          case 'BUY': return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
+                          case 'SELL': return { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' };
+                          case 'SPLIT': return { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' };
+                          case 'BONUS': return { bg: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' };
+                          default: return { bg: 'rgba(100, 116, 139, 0.1)', color: '#64748b' };
+                        }
+                      };
+
+                      const typeColors = getTypeColor(transaction.transactionType);
+
+                      return (
+                        <TableRow
+                          key={transaction.id}
+                          hover
+                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        >
+                          <TableCell>
+                            <Typography variant="body2">
+                              {formatDate(transaction.transactionDate)}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {transaction.companyName}
+                          </TableCell>
+                          <TableCell>
+                            <Box>
+                              <Typography variant="body2" fontWeight={600}>
+                                {transaction.symbol}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {transaction.companyName}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={transaction.transactionType}
+                              size="small"
+                              sx={{
+                                fontWeight: 600,
+                                backgroundColor: typeColors.bg,
+                                color: typeColors.color,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            {isCorporateAction ? (
+                              <Box>
+                                <Typography variant="body2">
+                                  {transaction.quantityBefore} → {transaction.quantity}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {transaction.splitRatio}x
+                                </Typography>
+                              </Box>
+                            ) : (
+                              <Typography variant="body2">{transaction.quantity}</Typography>
+                            )}
+                          </TableCell>
+                          <TableCell align="right">
+                            {isCorporateAction ? (
+                              <Box>
+                                <Typography variant="body2" color="text.secondary">
+                                  {transaction.avgPriceBefore ? formatCurrency(transaction.avgPriceBefore) : '-'}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  avg before
+                                </Typography>
+                              </Box>
+                            ) : (
+                              <Typography variant="body2">
+                                {formatCurrency(transaction.price)}
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell align="right">
+                            {isCorporateAction ? (
+                              <Typography variant="body2" color="text.secondary">
+                                -
+                              </Typography>
+                            ) : (
+                              <Typography variant="body2" fontWeight={600}>
+                                {formatCurrency(transaction.totalAmount)}
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={transaction.exchange || 'NSE'}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontWeight: 500 }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                maxWidth: 200,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                              title={transaction.notes || ''}
+                            >
+                              {transaction.notes || '-'}
                             </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={transaction.transactionType}
-                            size="small"
-                            sx={{
-                              fontWeight: 600,
-                              backgroundColor:
-                                transaction.transactionType === 'BUY'
-                                  ? 'rgba(16, 185, 129, 0.1)'
-                                  : 'rgba(239, 68, 68, 0.1)',
-                              color:
-                                transaction.transactionType === 'BUY'
-                                  ? '#10b981'
-                                  : '#ef4444',
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2">{transaction.quantity}</Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2">
-                            {formatCurrency(transaction.price)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" fontWeight={600}>
-                            {formatCurrency(transaction.totalAmount)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={transaction.exchange || 'NSE'}
-                            size="small"
-                            variant="outlined"
-                            sx={{ fontWeight: 500 }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                              maxWidth: 200,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                            title={transaction.notes || ''}
-                          >
-                            {transaction.notes || '-'}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
