@@ -121,6 +121,18 @@ export interface PortfolioAnalytics {
   dividendIncome: number;
 }
 
+export interface TransactionPLSummary {
+  realizedPL: number;
+  unrealizedPL: number;
+  totalBuyAmount: number;
+  totalSellAmount: number;
+  buyCount: number;
+  sellCount: number;
+  holdingsCount: number;
+  currentHoldingsValue: number;
+  totalInvested: number;
+}
+
 // Time-Based Gains Types
 export interface PeriodGain {
   gainPercent: number;

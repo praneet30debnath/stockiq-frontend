@@ -1,5 +1,5 @@
 import { axiosInstance } from '../axios-config';
-import { Portfolio, Transaction, TransactionRequest, PortfolioAnalytics, TimeBasedPortfolio } from '@/types';
+import { Portfolio, Transaction, TransactionRequest, PortfolioAnalytics, TimeBasedPortfolio, TransactionPLSummary } from '@/types';
 
 export interface TransactionFilters {
   startDate?: string;
@@ -30,6 +30,19 @@ export const portfolioApi = {
   },
 
   getTransactionSymbols: () => axiosInstance.get<string[]>(`/portfolio/transactions/symbols`),
+
+  getTransactionPLSummary: (filters?: TransactionFilters) => {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+    if (filters?.type && filters.type !== 'ALL') params.append('type', filters.type);
+    if (filters?.symbols && filters.symbols.length > 0) {
+      filters.symbols.forEach(symbol => params.append('symbols', symbol));
+    }
+
+    const queryString = params.toString();
+    return axiosInstance.get<TransactionPLSummary>(`/portfolio/transactions/summary${queryString ? `?${queryString}` : ''}`);
+  },
 
   getTransactionsBySymbol: (symbol: string) =>
     axiosInstance.get<Transaction[]>(`/portfolio/transactions/${symbol}`),

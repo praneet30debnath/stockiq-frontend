@@ -19,12 +19,13 @@ import {
   TableSortLabel,
   Chip,
   Autocomplete,
+  Skeleton,
 } from '@mui/material';
-import { Refresh, Clear } from '@mui/icons-material';
+import { Refresh, Clear, TrendingUp, TrendingDown, AccountBalance } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { portfolioApi, TransactionFilters } from '@/api/endpoints/portfolio.api';
-import { Transaction } from '@/types';
-import { formatCurrency, formatDate } from '@/utils/formatters';
+import { Transaction, TransactionPLSummary } from '@/types';
+import { formatCurrency, formatDate, getChangeColor } from '@/utils/formatters';
 
 type TransactionTypeFilter = 'ALL' | 'BUY' | 'SELL';
 type SortField = 'transactionDate' | 'symbol' | 'transactionType' | 'quantity' | 'price' | 'totalAmount' | 'exchange';
@@ -34,6 +35,10 @@ const TransactionHistory = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // P&L Summary
+  const [plSummary, setPLSummary] = useState<TransactionPLSummary | null>(null);
+  const [plSummaryLoading, setPLSummaryLoading] = useState(true);
 
   // Available symbols for dropdown
   const [availableSymbols, setAvailableSymbols] = useState<string[]>([]);
@@ -54,9 +59,10 @@ const TransactionHistory = () => {
     fetchAvailableSymbols();
   }, []);
 
-  // Fetch transactions when filters change
+  // Fetch transactions and P&L summary when filters change
   useEffect(() => {
     fetchTransactions();
+    fetchPLSummary();
   }, [startDate, endDate, typeFilter, selectedSymbols]);
 
   const fetchAvailableSymbols = async () => {
@@ -71,24 +77,39 @@ const TransactionHistory = () => {
     }
   };
 
+  const getFilters = (): TransactionFilters => {
+    const filters: TransactionFilters = {};
+    if (startDate) filters.startDate = startDate;
+    if (endDate) filters.endDate = endDate;
+    if (typeFilter !== 'ALL') filters.type = typeFilter;
+    if (selectedSymbols.length > 0) filters.symbols = selectedSymbols;
+    return filters;
+  };
+
   const fetchTransactions = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const filters: TransactionFilters = {};
-      if (startDate) filters.startDate = startDate;
-      if (endDate) filters.endDate = endDate;
-      if (typeFilter !== 'ALL') filters.type = typeFilter;
-      if (selectedSymbols.length > 0) filters.symbols = selectedSymbols;
-
-      const response = await portfolioApi.getTransactions(filters);
+      const response = await portfolioApi.getTransactions(getFilters());
       setTransactions(response.data);
     } catch (err: any) {
       console.error('Error fetching transactions:', err);
       setError(err.response?.data?.message || 'Failed to fetch transactions');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPLSummary = async () => {
+    try {
+      setPLSummaryLoading(true);
+      const response = await portfolioApi.getTransactionPLSummary(getFilters());
+      setPLSummary(response.data);
+    } catch (err) {
+      console.error('Error fetching P&L summary:', err);
+    } finally {
+      setPLSummaryLoading(false);
     }
   };
 
@@ -267,6 +288,127 @@ const TransactionHistory = () => {
             </Box>
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* P&L Summary Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          {/* Unrealized P&L Card */}
+          <Card>
+            <CardContent sx={{ py: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <AccountBalance sx={{ fontSize: 20, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.secondary">
+                  Unrealized P&L
+                </Typography>
+                {hasActiveFilters && (
+                  <Chip label="Filtered" size="small" sx={{ ml: 'auto', fontSize: '0.65rem', height: 18 }} />
+                )}
+              </Box>
+              {plSummaryLoading ? (
+                <Skeleton width={120} height={32} />
+              ) : (
+                <>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ color: getChangeColor(plSummary?.unrealizedPL || 0) }}
+                  >
+                    {formatCurrency(plSummary?.unrealizedPL || 0)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {plSummary?.holdingsCount || 0} holdings • Invested: {formatCurrency(plSummary?.totalInvested || 0)}
+                  </Typography>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Realized P&L Card */}
+          <Card>
+            <CardContent sx={{ py: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                {(plSummary?.realizedPL || 0) >= 0 ? (
+                  <TrendingUp sx={{ fontSize: 20, color: 'text.secondary' }} />
+                ) : (
+                  <TrendingDown sx={{ fontSize: 20, color: 'text.secondary' }} />
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  Realized P&L
+                </Typography>
+                {hasActiveFilters && (
+                  <Chip label="Filtered" size="small" sx={{ ml: 'auto', fontSize: '0.65rem', height: 18 }} />
+                )}
+              </Box>
+              {plSummaryLoading ? (
+                <Skeleton width={120} height={32} />
+              ) : (
+                <>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ color: getChangeColor(plSummary?.realizedPL || 0) }}
+                  >
+                    {formatCurrency(plSummary?.realizedPL || 0)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {plSummary?.sellCount || 0} sell transactions
+                  </Typography>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Total P&L Card */}
+          <Card sx={{ gridColumn: { xs: '1', sm: '1 / -1', md: 'auto' } }}>
+            <CardContent sx={{ py: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Total P&L
+                </Typography>
+                {hasActiveFilters && (
+                  <Chip label="Filtered" size="small" sx={{ ml: 'auto', fontSize: '0.65rem', height: 18 }} />
+                )}
+              </Box>
+              {plSummaryLoading ? (
+                <Skeleton width={120} height={32} />
+              ) : (
+                <>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{
+                      color: getChangeColor(
+                        (plSummary?.realizedPL || 0) + (plSummary?.unrealizedPL || 0)
+                      ),
+                    }}
+                  >
+                    {formatCurrency((plSummary?.realizedPL || 0) + (plSummary?.unrealizedPL || 0))}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Buy: {formatCurrency(plSummary?.totalBuyAmount || 0)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Sell: {formatCurrency(plSummary?.totalSellAmount || 0)}
+                    </Typography>
+                  </Box>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
       </motion.div>
 
       {/* Error Alert */}
