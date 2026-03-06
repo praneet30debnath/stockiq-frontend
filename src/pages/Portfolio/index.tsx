@@ -14,8 +14,10 @@ import {
   DialogActions,
   ToggleButtonGroup,
   ToggleButton,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
-import { Add, TrendingUp, TrendingDown, Refresh, AccountBalance, Assessment } from '@mui/icons-material';
+import { Add, TrendingUp, TrendingDown, Refresh, AccountBalance, Assessment, Search } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { formatCurrency, formatPercent } from '@/utils/formatters';
 import { isMarketCurrentlyOpen } from '@/utils/marketHolidays';
@@ -85,6 +87,8 @@ const Portfolio = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [sortField, setSortField] = useState<SortField>('currentValue');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Time-based gains state
   const [viewMode, setViewMode] = useState<PortfolioViewMode>('default');
@@ -174,7 +178,15 @@ const Portfolio = () => {
   const sortedHoldings = () => {
     if (!portfolioData?.holdings) return [];
 
-    const holdings = [...portfolioData.holdings];
+    const query = searchQuery.trim().toLowerCase();
+    const holdings = query
+      ? portfolioData.holdings.filter(
+          (h: Holding) =>
+            h.symbol.toLowerCase().includes(query) ||
+            h.companyName.toLowerCase().includes(query)
+        )
+      : [...portfolioData.holdings];
+
     return holdings.sort((a: Holding, b: Holding) => {
       let aValue = a[sortField];
       let bValue = b[sortField];
@@ -254,6 +266,20 @@ const Portfolio = () => {
   };
 
   const holdings = sortedHoldings();
+
+  const filteredTimeBasedData = (() => {
+    if (!timeBasedData) return null;
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return timeBasedData;
+    return {
+      ...timeBasedData,
+      holdings: timeBasedData.holdings.filter(
+        (h) =>
+          h.symbol.toLowerCase().includes(query) ||
+          h.companyName.toLowerCase().includes(query)
+      ),
+    };
+  })();
 
   return (
     <Box>
@@ -350,12 +376,31 @@ const Portfolio = () => {
           <CardContent sx={{ p: 0 }}>
             <Box sx={{ p: 3, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
               <Typography variant="h6" fontWeight="bold">
-                All Holdings ({holdings.length})
+                All Holdings ({viewMode === 'default' ? holdings.length : (filteredTimeBasedData?.holdings.length ?? (timeBasedData?.holdings.length ?? 0))})
               </Typography>
 
-              {/* View Mode Switcher */}
-              {holdings.length > 0 && (
-                <ToggleButtonGroup
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                {/* Search */}
+                {(portfolioData?.holdings?.length > 0) && (
+                  <TextField
+                    size="small"
+                    placeholder="Search holdings..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search fontSize="small" sx={{ color: 'text.secondary' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ width: 220 }}
+                  />
+                )}
+
+                {/* View Mode Switcher */}
+                {portfolioData?.holdings?.length > 0 && (
+                  <ToggleButtonGroup
                   value={viewMode}
                   exclusive
                   onChange={handleViewModeChange}
@@ -377,9 +422,10 @@ const Portfolio = () => {
                     Time-Based Gains
                   </ToggleButton>
                 </ToggleButtonGroup>
-              )}
+                )}
+              </Box>
             </Box>
-            {holdings.length === 0 ? (
+            {portfolioData?.holdings?.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
                 <Typography variant="h6" color="text.secondary" gutterBottom>
                   No holdings yet
@@ -396,16 +442,24 @@ const Portfolio = () => {
                 </Button>
               </Box>
             ) : viewMode === 'default' ? (
-              <DefaultHoldingsTable
-                holdings={holdings}
-                sortField={sortField}
-                sortOrder={sortOrder}
-                onSort={handleSort}
-                onRowClick={setSelectedStock}
-              />
+              holdings.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 6 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    No holdings match "{searchQuery}"
+                  </Typography>
+                </Box>
+              ) : (
+                <DefaultHoldingsTable
+                  holdings={holdings}
+                  sortField={sortField}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                  onRowClick={setSelectedStock}
+                />
+              )
             ) : (
               <TimeBasedGainsTable
-                data={timeBasedData}
+                data={filteredTimeBasedData}
                 loading={timeBasedLoading}
                 onRefresh={fetchTimeBasedGains}
               />
