@@ -539,6 +539,9 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
               rules={{
                 required: 'Transaction date is required',
                 validate: (value) => {
+                  if (value > new Date().toISOString().split('T')[0]) {
+                    return 'Transaction date cannot be in the future';
+                  }
                   const marketStatus = isMarketOpen(value);
                   if (!marketStatus.isOpen) {
                     return marketStatus.reason || 'Market is closed on this date';
@@ -555,6 +558,7 @@ export const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
                   error={!!errors.transactionDate}
                   helperText={errors.transactionDate?.message || 'Select a trading day (Mon-Fri, excluding holidays)'}
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ max: new Date().toISOString().split('T')[0] }}
                 />
               )}
             />
