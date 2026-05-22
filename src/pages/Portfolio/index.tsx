@@ -30,7 +30,7 @@ import { DefaultHoldingsTable } from '@/components/portfolio/DefaultHoldingsTabl
 import { TimeBasedGainsTable } from '@/components/portfolio/TimeBasedGainsTable';
 import { Holding, PortfolioViewMode, TimeBasedPortfolio } from '@/types';
 
-type SortField = 'symbol' | 'currentValue' | 'gain' | 'gainPercent' | 'dayChange';
+type SortField = 'symbol' | 'currentValue' | 'gain' | 'gainPercent' | 'dayChange' | 'cagrPercent' | 'xirrPercent';
 type SortOrder = 'asc' | 'desc';
 
 const StatCard = ({ title, value, subtitle, icon, color }: any) => (
@@ -263,6 +263,7 @@ const Portfolio = () => {
     totalGainPercent: portfolioData?.totalGainPercent || 0,
     dayChange: portfolioData?.dayChange || 0,
     dayChangePercent: portfolioData?.dayChangePercent || 0,
+    portfolioXirr: portfolioData?.portfolioXirr ?? null,
   };
 
   const holdings = sortedHoldings();
@@ -330,7 +331,7 @@ const Portfolio = () => {
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <StatCard
             title="Total Invested"
             value={formatCurrency(stats.totalInvested)}
@@ -338,7 +339,7 @@ const Portfolio = () => {
             color="#667eea"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <StatCard
             title="Current Value"
             value={formatCurrency(stats.currentValue)}
@@ -346,7 +347,7 @@ const Portfolio = () => {
             color="#764ba2"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <StatCard
             title="Total Gain"
             value={formatCurrency(stats.totalGain)}
@@ -355,13 +356,22 @@ const Portfolio = () => {
             color={stats.totalGain >= 0 ? '#10b981' : '#ef4444'}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <StatCard
             title="Today's Change"
             value={formatCurrency(stats.dayChange)}
             subtitle={stats.dayChangePercent ? formatPercent(stats.dayChangePercent) : '-'}
             icon={stats.dayChange >= 0 ? <TrendingUp sx={{ color: 'white' }} /> : <TrendingDown sx={{ color: 'white' }} />}
             color={stats.dayChange >= 0 ? '#10b981' : '#ef4444'}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <StatCard
+            title="Portfolio XIRR"
+            value={stats.portfolioXirr != null ? formatPercent(stats.portfolioXirr) : '—'}
+            subtitle="Annualized return"
+            icon={stats.portfolioXirr != null && stats.portfolioXirr >= 0 ? <TrendingUp sx={{ color: 'white' }} /> : <TrendingDown sx={{ color: 'white' }} />}
+            color={stats.portfolioXirr != null && stats.portfolioXirr >= 0 ? '#f59e0b' : '#ef4444'}
           />
         </Grid>
       </Grid>

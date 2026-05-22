@@ -71,6 +71,8 @@ export interface Holding {
   dayChange: number;
   dayChangePercent: number;
   exchange?: Exchange;
+  cagrPercent?: number;
+  xirrPercent?: number;
 }
 
 export interface Portfolio {
@@ -80,6 +82,7 @@ export interface Portfolio {
   totalGainPercent: number;
   dayChange: number;
   dayChangePercent: number;
+  portfolioXirr?: number;
   holdings: Holding[];
 }
 

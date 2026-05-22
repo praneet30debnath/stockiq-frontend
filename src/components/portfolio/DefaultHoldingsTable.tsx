@@ -10,11 +10,12 @@ import {
   TableRow,
   Chip,
   TableSortLabel,
+  Tooltip,
 } from '@mui/material';
 import { formatCurrency, formatPercent, getChangeColor } from '@/utils/formatters';
 import { Holding } from '@/types';
 
-type SortField = 'symbol' | 'currentValue' | 'gain' | 'gainPercent' | 'dayChange';
+type SortField = 'symbol' | 'currentValue' | 'gain' | 'gainPercent' | 'dayChange' | 'cagrPercent' | 'xirrPercent';
 type SortOrder = 'asc' | 'desc';
 
 interface DefaultHoldingsTableProps {
@@ -96,6 +97,32 @@ export const DefaultHoldingsTable: React.FC<DefaultHoldingsTableProps> = ({
                 </Typography>
               </TableSortLabel>
             </TableCell>
+            <TableCell align="right">
+              <Tooltip title="Compound Annual Growth Rate — annualized return assuming a single lump-sum investment" arrow>
+                <TableSortLabel
+                  active={sortField === 'cagrPercent'}
+                  direction={sortField === 'cagrPercent' ? sortOrder : 'asc'}
+                  onClick={() => onSort('cagrPercent')}
+                >
+                  <Typography variant="body2" fontWeight={700}>
+                    CAGR
+                  </Typography>
+                </TableSortLabel>
+              </Tooltip>
+            </TableCell>
+            <TableCell align="right">
+              <Tooltip title="Extended Internal Rate of Return — annualized return accounting for exact dates of all transactions" arrow>
+                <TableSortLabel
+                  active={sortField === 'xirrPercent'}
+                  direction={sortField === 'xirrPercent' ? sortOrder : 'asc'}
+                  onClick={() => onSort('xirrPercent')}
+                >
+                  <Typography variant="body2" fontWeight={700}>
+                    XIRR
+                  </Typography>
+                </TableSortLabel>
+              </Tooltip>
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -176,6 +203,38 @@ export const DefaultHoldingsTable: React.FC<DefaultHoldingsTableProps> = ({
                 >
                   {formatPercent(holding.dayChangePercent)}
                 </Typography>
+              </TableCell>
+              <TableCell align="right">
+                {holding.cagrPercent != null ? (
+                  <Chip
+                    label={formatPercent(holding.cagrPercent)}
+                    size="small"
+                    sx={{
+                      background: `${getChangeColor(holding.cagrPercent)}15`,
+                      color: getChangeColor(holding.cagrPercent),
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                    }}
+                  />
+                ) : (
+                  <Typography variant="caption" color="text.secondary">—</Typography>
+                )}
+              </TableCell>
+              <TableCell align="right">
+                {holding.xirrPercent != null ? (
+                  <Chip
+                    label={formatPercent(holding.xirrPercent)}
+                    size="small"
+                    sx={{
+                      background: `${getChangeColor(holding.xirrPercent)}15`,
+                      color: getChangeColor(holding.xirrPercent),
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                    }}
+                  />
+                ) : (
+                  <Typography variant="caption" color="text.secondary">—</Typography>
+                )}
               </TableCell>
             </TableRow>
           ))}
