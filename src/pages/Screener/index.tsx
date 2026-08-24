@@ -122,6 +122,10 @@ const Screener = () => {
   }, [filter, debouncedSearch]);
 
   useEffect(() => {
+    setFilter(prev => ({...prev, page: 0 }));
+  }, [debouncedSearch]);
+
+  useEffect(() => {
     fetchData();
   }, [fetchData]);
 
