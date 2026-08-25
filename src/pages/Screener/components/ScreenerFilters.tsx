@@ -202,7 +202,9 @@ const ScreenerFilters = ({
                   label={<Typography variant="body2">Bullish Stocks Only</Typography>}
                 />
                 <Tooltip title="Momentum accelerating: each period's gain must exceed the previous period's (periods with no data are skipped).">
-                  <InfoOutlined fontSize="small" color="action" sx={{ ml: 0.5 }} />
+                  <IconButton size="small" sx={{ ml: 0.5 }}>
+                    <InfoOutlined fontSize="small" color="action" />
+                  </IconButton>
                 </Tooltip>
               </Box>
               <FormControlLabel
