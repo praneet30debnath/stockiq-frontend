@@ -19,8 +19,9 @@ import {
   FormControlLabel,
   Checkbox,
   Stack,
+  Tooltip,
 } from '@mui/material';
-import { Close, ExpandMore, FilterAlt, RestartAlt } from '@mui/icons-material';
+import { Close, ExpandMore, FilterAlt, RestartAlt, InfoOutlined } from '@mui/icons-material';
 import { ScreenerFilter } from '@/types';
 
 interface ScreenerFiltersProps {
@@ -135,6 +136,7 @@ const ScreenerFilters = ({
     if (localFilter.minGain5Y || localFilter.maxGain5Y) count++;
     if (localFilter.near52WeekHigh) count++;
     if (localFilter.near52WeekLow) count++;
+    if (localFilter.bullishOnly) count++;
     return count;
   };
 
@@ -173,6 +175,57 @@ const ScreenerFilters = ({
 
         {/* Filters */}
         <Box sx={{ maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
+          {/* Trend (quick filter, always visible) */}
+          <Box sx={{ mb: 2 }}>
+            <Typography fontWeight={500} sx={{ mb: 1 }}>
+              Trend
+            </Typography>
+            <Stack spacing={1}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={localFilter.bullishOnly || false}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setLocalFilter({
+                          ...localFilter,
+                          bullishOnly: checked || undefined,
+                          requirePositiveGain1d: checked
+                            ? localFilter.requirePositiveGain1d
+                            : undefined,
+                        });
+                      }}
+                      size="small"
+                    />
+                  }
+                  label={<Typography variant="body2">Bullish Stocks Only</Typography>}
+                />
+                <Tooltip title="Momentum accelerating: each period's gain must exceed the previous period's (periods with no data are skipped).">
+                  <InfoOutlined fontSize="small" color="action" sx={{ ml: 0.5 }} />
+                </Tooltip>
+              </Box>
+              <FormControlLabel
+                sx={{ ml: 3 }}
+                control={
+                  <Checkbox
+                    checked={localFilter.requirePositiveGain1d || false}
+                    disabled={!localFilter.bullishOnly}
+                    onChange={(e) =>
+                      setLocalFilter({
+                        ...localFilter,
+                        requirePositiveGain1d: e.target.checked || undefined,
+                      })
+                    }
+                    size="small"
+                  />
+                }
+                label={<Typography variant="body2">Require positive 1-day gain</Typography>}
+              />
+            </Stack>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+
           {/* Market Type */}
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Market Type</InputLabel>

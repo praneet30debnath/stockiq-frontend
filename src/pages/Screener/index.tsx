@@ -175,6 +175,7 @@ const Screener = () => {
     if (filter.minGain5Y || filter.maxGain5Y) count++;
     if (filter.near52WeekHigh) count++;
     if (filter.near52WeekLow) count++;
+    if (filter.bullishOnly) count++;
     return count;
   };
 

@@ -324,6 +324,10 @@ export interface ScreenerFilter {
   near52WeekHigh?: boolean;
   near52WeekLow?: boolean;
 
+  // Bullish trend filter
+  bullishOnly?: boolean;
+  requirePositiveGain1d?: boolean;
+
   // Sorting
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
