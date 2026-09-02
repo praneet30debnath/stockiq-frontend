@@ -12,6 +12,7 @@ import Watchlist from '@/pages/Watchlist';
 import Alerts from '@/pages/Alerts';
 import TaxReports from '@/pages/TaxReports';
 import Screener from '@/pages/Screener';
+import USScreener from '@/pages/USScreener';
 import { Settings } from '@/pages/Settings';
 
 export const AppRoutes = () => {
@@ -30,6 +31,7 @@ export const AppRoutes = () => {
           <Route path={ROUTES.ALERTS} element={<Alerts />} />
           <Route path={ROUTES.TAX_REPORTS} element={<TaxReports />} />
           <Route path={ROUTES.SCREENER} element={<Screener />} />
+          <Route path={ROUTES.US_SCREENER} element={<USScreener />} />
           <Route path={ROUTES.SETTINGS} element={<Settings />} />
         </Route>
 

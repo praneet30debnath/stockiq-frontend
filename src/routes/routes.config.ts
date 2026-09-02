@@ -10,5 +10,6 @@ export const ROUTES = {
   ALERTS: '/alerts',
   TAX_REPORTS: '/tax-reports',
   SCREENER: '/screener',
+  US_SCREENER: '/us-screener',
   SETTINGS: '/settings',
 } as const;

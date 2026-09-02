@@ -348,6 +348,97 @@ export interface ScreenerStats {
   lastYahooUpdate: string | null;
 }
 
+// US Screener Types
+export interface UsScreenerStock {
+  id: number;
+  symbol: string;
+  companyName: string;
+
+  // Nasdaq Data
+  marketCap: number | null;
+  sector: string | null;
+  industry: string | null;
+
+  // Yahoo Finance Data
+  ltp: number | null;
+  volume: number | null;
+  fiftyTwoWeekHigh: number | null;
+  fiftyTwoWeekLow: number | null;
+
+  // Time Gains (percentage)
+  gain1D: number | null;
+  gain5D: number | null;
+  gain1M: number | null;
+  gain3M: number | null;
+  gain6M: number | null;
+  gain1Y: number | null;
+  gain5Y: number | null;
+
+  // Timestamps
+  nasdaqDataUpdatedAt: string | null;
+  yahooDataUpdatedAt: string | null;
+}
+
+export interface UsScreenerFilter {
+  search?: string;
+  sectors?: string[];
+  industries?: string[];
+
+  // Price range
+  minPrice?: number;
+  maxPrice?: number;
+
+  // Market cap range
+  minMarketCap?: number;
+  maxMarketCap?: number;
+
+  // Volume range
+  minVolume?: number;
+  maxVolume?: number;
+
+  // Gain ranges
+  minGain1D?: number;
+  maxGain1D?: number;
+  minGain5D?: number;
+  maxGain5D?: number;
+  minGain1M?: number;
+  maxGain1M?: number;
+  minGain3M?: number;
+  maxGain3M?: number;
+  minGain6M?: number;
+  maxGain6M?: number;
+  minGain1Y?: number;
+  maxGain1Y?: number;
+  minGain5Y?: number;
+  maxGain5Y?: number;
+
+  // 52-week filters
+  near52WeekHigh?: boolean;
+  near52WeekLow?: boolean;
+
+  // Bullish trend filter
+  bullishOnly?: boolean;
+  requirePositiveGain1d?: boolean;
+
+  // Sorting
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+
+  // Pagination
+  page?: number;
+  size?: number;
+}
+
+export interface UsScreenerStats {
+  totalStocks: number;
+  stocksWithYahooData: number;
+  stocksWithNasdaqData: number;
+  sectorsCount: number;
+  industriesCount: number;
+  lastNasdaqUpdate: string | null;
+  lastYahooUpdate: string | null;
+}
+
 export interface PagedResponse<T> {
   content: T[];
   page: number;

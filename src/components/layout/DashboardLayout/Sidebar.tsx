@@ -19,6 +19,7 @@ import {
   Notifications,
   Assessment,
   FilterList,
+  Public,
   TrendingUp,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -33,6 +34,7 @@ const menuItems = [
   { label: 'Alerts', icon: <Notifications />, path: ROUTES.ALERTS },
   { label: 'Tax Reports', icon: <Assessment />, path: ROUTES.TAX_REPORTS },
   { label: 'Screener', icon: <FilterList />, path: ROUTES.SCREENER },
+  { label: 'US Screener', icon: <Public />, path: ROUTES.US_SCREENER },
 ];
 
 export const Sidebar = () => {
