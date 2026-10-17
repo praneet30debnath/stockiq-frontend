@@ -176,6 +176,7 @@ const Screener = () => {
     if (filter.near52WeekHigh) count++;
     if (filter.near52WeekLow) count++;
     if (filter.bullishOnly) count++;
+    if (filter.bearishOnly) count++;
     return count;
   };
 

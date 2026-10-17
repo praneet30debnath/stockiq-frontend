@@ -328,6 +328,10 @@ export interface ScreenerFilter {
   bullishOnly?: boolean;
   requirePositiveGain1d?: boolean;
 
+  // Bearish trend filter
+  bearishOnly?: boolean;
+  requireNegativeGain1d?: boolean;
+
   // Sorting
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
@@ -419,6 +423,10 @@ export interface UsScreenerFilter {
   // Bullish trend filter
   bullishOnly?: boolean;
   requirePositiveGain1d?: boolean;
+
+  // Bearish trend filter
+  bearishOnly?: boolean;
+  requireNegativeGain1d?: boolean;
 
   // Sorting
   sortBy?: string;

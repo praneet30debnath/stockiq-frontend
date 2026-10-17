@@ -18,6 +18,8 @@ import {
   AccordionDetails,
   FormControlLabel,
   Checkbox,
+  RadioGroup,
+  Radio,
   Stack,
   Tooltip,
 } from '@mui/material';
@@ -137,6 +139,7 @@ const ScreenerFilters = ({
     if (localFilter.near52WeekHigh) count++;
     if (localFilter.near52WeekLow) count++;
     if (localFilter.bullishOnly) count++;
+    if (localFilter.bearishOnly) count++;
     return count;
   };
 
@@ -177,42 +180,39 @@ const ScreenerFilters = ({
         <Box sx={{ maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
           {/* Trend (quick filter, always visible) */}
           <Box sx={{ mb: 2 }}>
-            <Typography fontWeight={500} sx={{ mb: 1 }}>
-              Trend
-            </Typography>
-            <Stack spacing={1}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={localFilter.bullishOnly || false}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setLocalFilter({
-                          ...localFilter,
-                          bullishOnly: checked || undefined,
-                          requirePositiveGain1d: checked
-                            ? localFilter.requirePositiveGain1d
-                            : undefined,
-                        });
-                      }}
-                      size="small"
-                    />
-                  }
-                  label={<Typography variant="body2">Bullish Stocks Only</Typography>}
-                />
-                <Tooltip title="Momentum accelerating: each period's gain must exceed the previous period's (periods with no data are skipped).">
-                  <IconButton size="small" sx={{ ml: 0.5 }}>
-                    <InfoOutlined fontSize="small" color="action" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography fontWeight={500}>Trend</Typography>
+              <Tooltip title="Bullish: each period's gain must exceed the previous period's (momentum accelerating). Bearish: each period's gain must be lower than the previous period's (momentum decelerating). Periods with no data are skipped either way.">
+                <IconButton size="small" sx={{ ml: 0.5 }}>
+                  <InfoOutlined fontSize="small" color="action" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <RadioGroup
+              row
+              sx={{ mt: 0.5 }}
+              value={localFilter.bullishOnly ? 'bullish' : localFilter.bearishOnly ? 'bearish' : 'none'}
+              onChange={(e) => {
+                const value = e.target.value;
+                setLocalFilter({
+                  ...localFilter,
+                  bullishOnly: value === 'bullish' ? true : undefined,
+                  bearishOnly: value === 'bearish' ? true : undefined,
+                  requirePositiveGain1d: value === 'bullish' ? localFilter.requirePositiveGain1d : undefined,
+                  requireNegativeGain1d: value === 'bearish' ? localFilter.requireNegativeGain1d : undefined,
+                });
+              }}
+            >
+              <FormControlLabel value="none" control={<Radio size="small" />} label={<Typography variant="body2">None</Typography>} />
+              <FormControlLabel value="bullish" control={<Radio size="small" />} label={<Typography variant="body2">Bullish</Typography>} />
+              <FormControlLabel value="bearish" control={<Radio size="small" />} label={<Typography variant="body2">Bearish</Typography>} />
+            </RadioGroup>
+            {localFilter.bullishOnly && (
               <FormControlLabel
                 sx={{ ml: 3 }}
                 control={
                   <Checkbox
                     checked={localFilter.requirePositiveGain1d || false}
-                    disabled={!localFilter.bullishOnly}
                     onChange={(e) =>
                       setLocalFilter({
                         ...localFilter,
@@ -224,7 +224,25 @@ const ScreenerFilters = ({
                 }
                 label={<Typography variant="body2">Require positive 1-day gain</Typography>}
               />
-            </Stack>
+            )}
+            {localFilter.bearishOnly && (
+              <FormControlLabel
+                sx={{ ml: 3 }}
+                control={
+                  <Checkbox
+                    checked={localFilter.requireNegativeGain1d || false}
+                    onChange={(e) =>
+                      setLocalFilter({
+                        ...localFilter,
+                        requireNegativeGain1d: e.target.checked || undefined,
+                      })
+                    }
+                    size="small"
+                  />
+                }
+                label={<Typography variant="body2">Require negative 1-day gain</Typography>}
+              />
+            )}
           </Box>
           <Divider sx={{ mb: 2 }} />
 
