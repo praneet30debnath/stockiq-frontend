@@ -18,4 +18,9 @@ export const authApi = {
   sendOtp: (email: string) => axiosInstance.post('/auth/send-otp', { email }),
 
   verifyOtp: (email: string, otp: string) => axiosInstance.post('/auth/verify-otp', { email, otp }),
+
+  forgotPassword: (email: string) => axiosInstance.post('/auth/forgot-password', { email }),
+
+  resetPassword: (data: { email: string; otp: string; newPassword: string; confirmPassword: string }) =>
+    axiosInstance.post('/auth/reset-password', data),
 };

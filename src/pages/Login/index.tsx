@@ -168,7 +168,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  sx={{ mb: 3 }}
+                  sx={{ mb: 1 }}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -182,6 +182,16 @@ const Login = () => {
                     ),
                   }}
                 />
+
+                <Box sx={{ textAlign: 'right', mb: 2 }}>
+                  <Button
+                    onClick={() => navigate(ROUTES.FORGOT_PASSWORD)}
+                    size="small"
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Forgot password?
+                  </Button>
+                </Box>
 
                 <Button
                   fullWidth
